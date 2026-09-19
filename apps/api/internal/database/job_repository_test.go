@@ -40,6 +40,9 @@ func setupIntegrationTest(t *testing.T) (*database.DB, *database.JobRepository) 
 		return nil, nil
 	}
 
+	// Limpa o banco antes de iniciar o teste
+	_, _ = dbInstance.Pool.Exec(ctx, "TRUNCATE TABLE jobs CASCADE;")
+
 	t.Cleanup(func() {
 		cleanCtx, cleanCancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cleanCancel()

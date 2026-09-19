@@ -190,7 +190,7 @@ jobs:
 
       - name: Executar testes de integração reais contra o PostgreSQL 18 (-race)
         working-directory: apps/api
-        run: go test -race -v -coverprofile=coverage-integration.out ./internal/database/... ./internal/collector/...
+        run: go test -race -v -p 1 -coverprofile=coverage-integration.out ./internal/database/... ./internal/collector/...
 
       - name: Relatório de cobertura dos testes de integração
         working-directory: apps/api
