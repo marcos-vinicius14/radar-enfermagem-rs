@@ -1754,14 +1754,21 @@ Do not depend exclusively on frontend validation.
 
 ---
 
-# 71. Testing
+# 71. Testing Strategy: Testing Trophy
+
+Adopt the **Testing Trophy** philosophy as our guiding strategy:
+
+1. **Static Analysis**: Linters (`go vet`, `golangci-lint`), Go compiler, strong typing, sqlc validation.
+2. **Unit Tests (Lean & Focused)**: Reserved for pure algorithms, math, text normalization, and complex calculation rules. Avoid extensive unit mocking of repositories and services.
+3. **Integration Tests (Primary Focus & Core of the Trophy)**: **Prioritize integration tests over unit tests.** Test components integrated with real dependencies (such as PostgreSQL running in Docker) to validate real queries, constraints, transactions, and behaviors. Integration tests offer the highest ROI and confidence against regression.
+4. **End-to-End Tests (E2E)**: High-level checks for critical business flows.
 
 Use Go's built-in `testing` package.
 
 Example:
 
 ```go
-func TestService_CreateUser(t *testing.T) {
+func TestJobRepository_InsertAndFindByID(t *testing.T) {
 	// ...
 }
 ```
@@ -1771,6 +1778,7 @@ Tests should clearly express:
 * input
 * expected behavior
 * actual behavior
+
 
 ---
 

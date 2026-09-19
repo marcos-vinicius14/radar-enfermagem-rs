@@ -16,7 +16,7 @@ func TestLoad_Defaults(t *testing.T) {
 		"DB_SSLMODE", "DB_MAX_CONNS", "DB_MIN_CONNS", "DB_CONN_TIMEOUT",
 	}
 	for _, env := range envVars {
-		os.Unsetenv(env)
+		_ = os.Unsetenv(env)
 	}
 
 	cfg, err := config.Load()

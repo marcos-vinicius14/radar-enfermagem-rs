@@ -9,7 +9,7 @@ Este roadmap organiza o desenvolvimento do **Radar Enfermagem RS** em milestones
 | Milestone | Descrição | Status |
 | :--- | :--- | :---: |
 | [Milestone 1](#milestone-1--fundação-do-projeto) | Fundação do Projeto (Monorepo, Go, Chi, Postgres 18, Migrations, Docker) | Concluída |
-| [Milestone 2](#milestone-2--domínio-e-persistência-de-vagas) | Domínio e Persistência de Vagas (`jobs`, UUIDv7, sqlc, Repository) | A Fazer |
+| [Milestone 2](#milestone-2--domínio-e-persistência-de-vagas) | Domínio e Persistência de Vagas (`jobs`, UUIDv7, sqlc, Repository) | Concluída |
 | [Milestone 3](#milestone-3--pipeline-de-coleta) | Pipeline de Coleta (Contrato Collector, RawJob, Normalizer, Deduplicator) | A Fazer |
 | [Milestone 4](#milestone-4--portais-oficiais) | Portais Oficiais (Santa Casa, Moinhos, São Lucas, Unimed, etc.) | A Fazer |
 | [Milestone 5](#milestone-5--scheduler-e-resiliência) | Scheduler e Resiliência (Cron, Errgroup, Rate Limiting, Retries) | A Fazer |
@@ -80,27 +80,27 @@ Este roadmap organiza o desenvolvimento do **Radar Enfermagem RS** em milestones
 
 > **Objetivo:** Modelar a entidade de vaga e implementar sua persistência.
 
-- [ ] **Task 9: Modelar entidade Job**
-  - [ ] Campos mínimos: `ID` (UUIDv7), `ExternalID`, título, empresa, descrição, cidade, estado, fonte, URL, datas, status, fingerprint
-- [ ] **Task 10: Criar migration da tabela jobs**
-  - [ ] Tabela `jobs` criada com `id UUID DEFAULT uuidv7()` (nativo PG 18)
-  - [ ] Constraint `UNIQUE(source, external_id)`
-  - [ ] Índices criados (`title`, `city`, `company`, `published_at`, `fingerprint`)
-  - [ ] Timestamps definidos (`created_at`, `updated_at`, `last_seen_at`)
-- [ ] **Task 11: Criar JobRepository**
-  - [ ] Inserir vaga
-  - [ ] Atualizar vaga
-  - [ ] Buscar por ID
-  - [ ] Buscar por fonte + external ID
-  - [ ] Listar vagas
-  - [ ] Atualizar `last_seen_at`
-- [ ] **Task 12: Implementar JobRepository PostgreSQL**
-  - [ ] Implementar repository usando queries geradas pelo `sqlc`
-  - [ ] Testes de integração cobrindo inserção, busca e atualização
-- [ ] **Task 13: Implementar geração de fingerprint**
-  - [ ] Gerar fingerprint com: empresa normalizada + título normalizado + cidade
-  - [ ] SHA-256 utilizado
-  - [ ] Testes cobrindo caixa alta/baixa, múltiplos espaços e acentos
+- [x] **Task 9: Modelar entidade Job**
+  - [x] Campos mínimos: `ID` (UUIDv7), `ExternalID`, título, empresa, descrição, cidade, estado, fonte, URL, datas, status, fingerprint
+- [x] **Task 10: Criar migration da tabela jobs**
+  - [x] Tabela `jobs` criada com `id UUID DEFAULT uuidv7()` (nativo PG 18)
+  - [x] Constraint `UNIQUE(source, external_id)`
+  - [x] Índices criados (`title`, `city`, `company`, `published_at`, `fingerprint`)
+  - [x] Timestamps definidos (`created_at`, `updated_at`, `last_seen_at`)
+- [x] **Task 11: Criar JobRepository**
+  - [x] Inserir vaga
+  - [x] Atualizar vaga
+  - [x] Buscar por ID
+  - [x] Buscar por fonte + external ID
+  - [x] Listar vagas
+  - [x] Atualizar `last_seen_at`
+- [x] **Task 12: Implementar JobRepository PostgreSQL**
+  - [x] Implementar repository usando queries geradas pelo `sqlc`
+  - [x] Testes de integração cobrindo inserção, busca e atualização
+- [x] **Task 13: Implementar geração de fingerprint**
+  - [x] Gerar fingerprint com: empresa normalizada + título normalizado + cidade
+  - [x] SHA-256 utilizado
+  - [x] Testes cobrindo caixa alta/baixa, múltiplos espaços e acentos
 
 ---
 
@@ -270,8 +270,8 @@ Este roadmap organiza o desenvolvimento do **Radar Enfermagem RS** em milestones
   - [ ] Normalização, fingerprint, deduplicação, regras de status e parsing dos collectors
 - [ ] **Task 66: Adicionar testes de integração**
   - [ ] Repository, queries, Full Text Search e API
-- [ ] **Task 67: Criar pipeline de CI**
-  - [ ] Executar `go test -race`, `golangci-lint`, `build` e validação de migrações
+- [x] **Task 67: Criar pipeline de CI**
+  - [x] Executar `go test -race`, `golangci-lint`, `build` e validação de migrações
 - [ ] **Task 68: Configurar health checks detalhados**
   - [ ] Endpoints `/health` e `/ready` com checagem de dependências
 - [ ] **Task 69: Criar documentação operacional**

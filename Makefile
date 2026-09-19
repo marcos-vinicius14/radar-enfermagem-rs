@@ -1,16 +1,25 @@
 -include .env
 export
 
-.PHONY: help test test-cover up down logs migrate-up migrate-down sqlc run build
+.PHONY: help test test-unit test-integration test-cover lint up down logs migrate-up migrate-down sqlc run build
 
 help: ## Exibe os comandos disponíveis
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
 
-test: ## Executa testes unitários com detecção de race conditions
+test: ## Executa todos os testes com detecção de race conditions
 	cd apps/api && go test -race -v ./...
+
+test-unit: ## Executa apenas testes unitários com detecção de race conditions
+	cd apps/api && go test -short -race -v ./...
+
+test-integration: ## Executa testes de integração reais contra o PostgreSQL
+	cd apps/api && go test -race -v ./internal/database/...
 
 test-cover: ## Executa testes e exibe relatório de cobertura
 	cd apps/api && go test -race -coverprofile=coverage.out ./... && go tool cover -func=coverage.out
+
+lint: ## Executa validação de formato e análise estática (go vet e gofmt)
+	cd apps/api && go vet ./... && test -z "$$(gofmt -s -l .)"
 
 up: ## Sobe os containers no docker compose
 	docker compose --env-file .env -f deployments/compose.yaml up -d db

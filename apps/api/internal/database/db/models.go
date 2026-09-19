@@ -5,8 +5,32 @@
 package db
 
 import (
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type Job struct {
+	ID             uuid.UUID
+	ExternalID     string
+	Title          string
+	Company        string
+	Description    string
+	City           string
+	State          string
+	Source         string
+	SourceUrl      string
+	Fingerprint    string
+	WorkMode       string
+	EmploymentType string
+	SalaryMin      pgtype.Int8
+	SalaryMax      pgtype.Int8
+	PublishedAt    pgtype.Timestamptz
+	CollectedAt    pgtype.Timestamptz
+	LastSeenAt     pgtype.Timestamptz
+	Status         string
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+}
 
 type SystemMetum struct {
 	Key       string

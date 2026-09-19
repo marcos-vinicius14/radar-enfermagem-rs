@@ -23,7 +23,6 @@ func NewRouter(l *slog.Logger, db DB) http.Handler {
 
 	// Middlewares essenciais
 	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
 	r.Use(logger.Middleware(l))
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
@@ -35,7 +34,7 @@ func NewRouter(l *slog.Logger, db DB) http.Handler {
 	// 404 Handler em JSON
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		respondJSON(w, http.StatusNotFound, map[string]string{
-			"error": "resource not found",
+			"error": "recurso não encontrado",
 		})
 	})
 

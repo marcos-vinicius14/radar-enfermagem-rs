@@ -24,11 +24,9 @@ func main() {
 		log.Fatalf("failed to load configuration: %v", err)
 	}
 
-	
 	dsn := fmt.Sprintf("pgx5://%s:%s@%s:%d/%s?sslmode=%s",
 		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName, cfg.DBSSLMode)
 
-	
 	migrationsPath := "file://migrations"
 	if _, err := os.Stat("migrations"); os.IsNotExist(err) {
 		if _, err := os.Stat("apps/api/migrations"); err == nil {
@@ -40,7 +38,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to initialize migrate: %v", err)
 	}
-	defer m.Close()
+	defer func() {
+		sourceErr, dbErr := m.Close()
+		if sourceErr != nil {
+			log.Printf("falha ao fechar fonte de migrações: %v", sourceErr)
+		}
+		if dbErr != nil {
+			log.Printf("falha ao fechar conexão de migrações: %v", dbErr)
+		}
+	}()
 
 	switch command {
 	case "up":
