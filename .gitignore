@@ -1,0 +1,32 @@
+# Binaries
+/bin/
+apps/api/bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test artifacts & coverage
+*.out
+*.test
+coverage.html
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Database / Docker volumes
+pgdata/
+
+# IDE / Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+Thumbs.db
