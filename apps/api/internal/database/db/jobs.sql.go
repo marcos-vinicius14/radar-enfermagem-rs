@@ -154,6 +154,61 @@ func (q *Queries) CreateJob(ctx context.Context, arg CreateJobParams) (Job, erro
 	return i, err
 }
 
+const getJobByFingerprint = `-- name: GetJobByFingerprint :one
+SELECT
+    id,
+    external_id,
+    title,
+    company,
+    description,
+    city,
+    state,
+    source,
+    source_url,
+    fingerprint,
+    work_mode,
+    employment_type,
+    salary_min,
+    salary_max,
+    published_at,
+    collected_at,
+    last_seen_at,
+    status,
+    created_at,
+    updated_at
+FROM jobs
+WHERE fingerprint = $1
+LIMIT 1
+`
+
+func (q *Queries) GetJobByFingerprint(ctx context.Context, fingerprint string) (Job, error) {
+	row := q.db.QueryRow(ctx, getJobByFingerprint, fingerprint)
+	var i Job
+	err := row.Scan(
+		&i.ID,
+		&i.ExternalID,
+		&i.Title,
+		&i.Company,
+		&i.Description,
+		&i.City,
+		&i.State,
+		&i.Source,
+		&i.SourceUrl,
+		&i.Fingerprint,
+		&i.WorkMode,
+		&i.EmploymentType,
+		&i.SalaryMin,
+		&i.SalaryMax,
+		&i.PublishedAt,
+		&i.CollectedAt,
+		&i.LastSeenAt,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getJobByID = `-- name: GetJobByID :one
 SELECT
     id,

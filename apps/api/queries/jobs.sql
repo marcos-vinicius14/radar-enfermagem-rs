@@ -150,6 +150,32 @@ SELECT
 FROM jobs
 WHERE source = $1 AND external_id = $2;
 
+-- name: GetJobByFingerprint :one
+SELECT
+    id,
+    external_id,
+    title,
+    company,
+    description,
+    city,
+    state,
+    source,
+    source_url,
+    fingerprint,
+    work_mode,
+    employment_type,
+    salary_min,
+    salary_max,
+    published_at,
+    collected_at,
+    last_seen_at,
+    status,
+    created_at,
+    updated_at
+FROM jobs
+WHERE fingerprint = $1
+LIMIT 1;
+
 -- name: ListJobs :many
 SELECT
     id,

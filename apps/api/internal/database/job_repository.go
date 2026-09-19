@@ -158,6 +158,22 @@ func (r *JobRepository) FindBySourceAndExternalID(ctx context.Context, source, e
 	return toDomainJob(row), nil
 }
 
+func (r *JobRepository) FindByFingerprint(ctx context.Context, fingerprint string) (job.Job, error) {
+	row, err := r.queries.GetJobByFingerprint(ctx, fingerprint)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return job.Job{}, job.ErrNotFound
+		}
+		r.logger.ErrorContext(ctx, "falha ao buscar vaga por fingerprint",
+			slog.String("fingerprint", fingerprint),
+			slog.String("erro", err.Error()),
+		)
+		return job.Job{}, fmt.Errorf("buscar vaga por fingerprint: %w", err)
+	}
+
+	return toDomainJob(row), nil
+}
+
 func (r *JobRepository) List(ctx context.Context, params job.ListParams) ([]job.Job, error) {
 	limit := params.Limit
 	if limit <= 0 {

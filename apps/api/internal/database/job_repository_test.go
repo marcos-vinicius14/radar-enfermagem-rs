@@ -410,3 +410,38 @@ func TestJobRepository_EdgeCases(t *testing.T) {
 		}
 	})
 }
+
+func TestJobRepository_FindByFingerprint(t *testing.T) {
+	_, repo := setupIntegrationTest(t)
+	ctx := context.Background()
+
+	testJob := newValidTestJob("santacasa", "sc-fingerprint-test")
+	created, err := repo.Insert(ctx, testJob)
+	if err != nil {
+		t.Fatalf("Insert() erro: %v", err)
+	}
+
+	t.Run("retorna vaga quando fingerprint existe", func(t *testing.T) {
+		found, err := repo.FindByFingerprint(ctx, created.Fingerprint)
+		if err != nil {
+			t.Fatalf("FindByFingerprint() erro inesperado: %v", err)
+		}
+		if found.ID != created.ID {
+			t.Errorf("ID = %v, esperado %v", found.ID, created.ID)
+		}
+		if found.Fingerprint != created.Fingerprint {
+			t.Errorf("Fingerprint = %q, esperado %q", found.Fingerprint, created.Fingerprint)
+		}
+	})
+
+	t.Run("retorna ErrNotFound quando fingerprint nao existe", func(t *testing.T) {
+		unknownFingerprint := "0000000000000000000000000000000000000000000000000000000000000000"
+		_, err := repo.FindByFingerprint(ctx, unknownFingerprint)
+		if err == nil {
+			t.Fatalf("esperava erro para fingerprint inexistente, obteve nil")
+		}
+		if !errors.Is(err, job.ErrNotFound) {
+			t.Fatalf("esperava errors.Is(err, job.ErrNotFound), obteve: %v", err)
+		}
+	})
+}

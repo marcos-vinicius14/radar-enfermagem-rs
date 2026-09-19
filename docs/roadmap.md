@@ -10,7 +10,7 @@ Este roadmap organiza o desenvolvimento do **Radar Enfermagem RS** em milestones
 | :--- | :--- | :---: |
 | [Milestone 1](#milestone-1--fundação-do-projeto) | Fundação do Projeto (Monorepo, Go, Chi, Postgres 18, Migrations, Docker) | Concluída |
 | [Milestone 2](#milestone-2--domínio-e-persistência-de-vagas) | Domínio e Persistência de Vagas (`jobs`, UUIDv7, sqlc, Repository) | Concluída |
-| [Milestone 3](#milestone-3--pipeline-de-coleta) | Pipeline de Coleta (Contrato Collector, RawJob, Normalizer, Deduplicator) | A Fazer |
+| [Milestone 3](#milestone-3--pipeline-de-coleta) | Pipeline de Coleta (Contrato Collector, RawJob, Normalizer, Deduplicator) | Concluída |
 | [Milestone 4](#milestone-4--portais-oficiais) | Portais Oficiais (Santa Casa, Moinhos, São Lucas, Unimed, etc.) | A Fazer |
 | [Milestone 5](#milestone-5--scheduler-e-resiliência) | Scheduler e Resiliência (Cron, Errgroup, Rate Limiting, Retries) | A Fazer |
 | [Milestone 6](#milestone-6--api-de-consulta) | API de Consulta (Endpoints REST paginados e filtráveis) | A Fazer |
@@ -108,33 +108,33 @@ Este roadmap organiza o desenvolvimento do **Radar Enfermagem RS** em milestones
 
 > **Objetivo:** Criar a abstração de collectors e validar todo o pipeline com uma primeira fonte.
 
-- [ ] **Task 14: Criar contrato Collector**
+- [x] **Task 14: Criar contrato Collector**
   ```go
   type Collector interface {
       Name() string
       Collect(ctx context.Context, query SearchQuery) ([]RawJob, error)
   }
   ```
-- [ ] **Task 15: Criar modelo RawJob**
-  - [ ] Representação intermediária que aceita dados incompletos das fontes e desacoplada da entidade `Job`
-- [ ] **Task 16: Criar Normalizer**
-  - [ ] Converter `RawJob` em `Job`
-  - [ ] Normalizações: título, empresa, cidade, estado, URL e data de publicação
-- [ ] **Task 17: Criar Deduplicator**
-  - [ ] Deduplicação exata por `source + external_id`
-  - [ ] Deduplicação lógica por `fingerprint`
-- [ ] **Task 18: Criar serviço CollectJobs**
-  - [ ] Orquestração: `Collector` → `RawJob` → `Normalizer` → `Deduplicator` → `Repository`
-  - [ ] Fluxo idempotente
-  - [ ] Atualização de vagas existentes
-  - [ ] Inserção de novas vagas
-  - [ ] Atualização de `last_seen_at`
-- [ ] **Task 19: Implementar primeiro collector (referência)**
-  - [ ] Coleta vagas reais
-  - [ ] Retorna `[]RawJob`
-  - [ ] Possui timeout configurado
-  - [ ] Possui testes de parsing
-  - [ ] Não persiste diretamente no banco
+- [x] **Task 15: Criar modelo RawJob**
+  - [x] Representação intermediária que aceita dados incompletos das fontes e desacoplada da entidade `Job`
+- [x] **Task 16: Criar Normalizer**
+  - [x] Converter `RawJob` em `Job`
+  - [x] Normalizações: título, empresa, cidade, estado, URL e data de publicação
+- [x] **Task 17: Criar Deduplicator**
+  - [x] Deduplicação exata por `source + external_id`
+  - [x] Deduplicação lógica por `fingerprint`
+- [x] **Task 18: Criar serviço CollectJobs**
+  - [x] Orquestração: `Collector` → `RawJob` → `Normalizer` → `Deduplicator` → `Repository`
+  - [x] Fluxo idempotente
+  - [x] Atualização de vagas existentes
+  - [x] Inserção de novas vagas
+  - [x] Atualização de `last_seen_at`
+- [x] **Task 19: Implementar primeiro collector (referência)**
+  - [x] Coleta vagas reais
+  - [x] Retorna `[]RawJob`
+  - [x] Possui timeout configurado
+  - [x] Possui testes de parsing
+  - [x] Não persiste diretamente no banco
 
 ---
 
