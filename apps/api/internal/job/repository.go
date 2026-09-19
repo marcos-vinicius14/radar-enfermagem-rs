@@ -21,6 +21,8 @@ type Repository interface {
 
 	FindBySourceAndExternalID(ctx context.Context, source, externalID string) (Job, error)
 
+	FindByFingerprint(ctx context.Context, fingerprint string) (Job, error)
+
 	List(ctx context.Context, params ListParams) ([]Job, error)
 
 	UpdateLastSeen(ctx context.Context, id uuid.UUID, lastSeenAt time.Time) error
