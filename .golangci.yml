@@ -7,10 +7,6 @@ linters:
       locale: US
       ignore-rules:
         - correspondente
-        - duplicata
-        - duplicatas
-        - duplicado
-        - duplicados
   exclusions:
     generated: lax
     presets:
