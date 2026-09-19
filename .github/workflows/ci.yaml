@@ -103,6 +103,10 @@ jobs:
         working-directory: apps/api
         run: go test -race -short -v -coverprofile=coverage-unit.out ./...
 
+      - name: Executar testes E2E reais de extração (Live Smoke Tests)
+        working-directory: apps/api
+        run: go test -v -tags=e2e ./internal/collector/... -run TestSantaCasaCollector_LiveE2E
+
       - name: Relatório de cobertura dos testes unitários
         working-directory: apps/api
         run: go tool cover -func=coverage-unit.out
@@ -185,7 +189,7 @@ jobs:
 
       - name: Executar testes de integração reais contra o PostgreSQL 18 (-race)
         working-directory: apps/api
-        run: go test -race -v -coverprofile=coverage-integration.out ./internal/database/...
+        run: go test -race -v -coverprofile=coverage-integration.out ./internal/database/... ./internal/collector/...
 
       - name: Relatório de cobertura dos testes de integração
         working-directory: apps/api
