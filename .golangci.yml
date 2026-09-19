@@ -1,16 +1,35 @@
-run:
-  timeout: 5m
-
+version: "2"
 linters:
   enable:
-    - errcheck
-    - gosimple
-    - govet
-    - ineffassign
-    - staticcheck
-    - unused
     - misspell
-
-issues:
-  exclude-dirs:
-    - apps/api/internal/database/db
+  settings:
+    misspell:
+      locale: US
+      ignore-rules:
+        - correspondente
+        - duplicata
+        - duplicatas
+        - duplicado
+        - duplicados
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - apps/api/internal/database/db
+      - internal/database/db
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - apps/api/internal/database/db
+      - internal/database/db
+      - third_party$
+      - builtin$
+      - examples$

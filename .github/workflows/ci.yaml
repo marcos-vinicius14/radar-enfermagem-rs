@@ -32,6 +32,9 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: 'true'
+
 jobs:
   lint-and-static-check:
     name: Lint & Análise Estática
@@ -67,7 +70,7 @@ jobs:
           git diff --exit-code go.mod go.sum
 
       - name: Instalar sqlc
-        uses: sqlc-dev/setup-sqlc@v4
+        uses: sqlc-dev/setup-sqlc@v5
         with:
           sqlc-version: '1.31.1'
 
@@ -76,7 +79,7 @@ jobs:
         run: sqlc diff
 
       - name: Executar golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v9
         with:
           version: latest
           working-directory: apps/api
