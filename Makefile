@@ -6,20 +6,20 @@ export
 help: ## Exibe os comandos disponíveis
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
 
-test: ## Executa todos os testes com detecção de race conditions
-	cd apps/api && go test -race -v ./...
+test: ## Executa todos os testes com detecção de race conditions (sequencial entre pacotes)
+	cd apps/api && go test -race -p 1 -v ./...
 
 test-unit: ## Executa apenas testes unitários com detecção de race conditions
 	cd apps/api && go test -short -race -v ./...
 
 test-integration: ## Executa testes de integração reais contra o PostgreSQL
-	cd apps/api && go test -race -v ./internal/database/... ./internal/collector/...
+	cd apps/api && go test -race -p 1 -v ./internal/database/... ./internal/collector/...
 
 test-e2e: ## Executa testes E2E reais contra portais externos (detecta quebra de layout)
 	cd apps/api && go test -v -tags=e2e ./internal/collector/... -run TestSantaCasaCollector_LiveE2E
 
 test-cover: ## Executa testes e exibe relatório de cobertura
-	cd apps/api && go test -race -coverprofile=coverage.out ./... && go tool cover -func=coverage.out
+	cd apps/api && go test -race -p 1 -coverprofile=coverage.out ./... && go tool cover -func=coverage.out
 
 lint: ## Executa validação de formato e análise estática (go vet e gofmt)
 	cd apps/api && go vet ./... && test -z "$$(gofmt -s -l .)"
