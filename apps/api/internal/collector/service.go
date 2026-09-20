@@ -184,7 +184,7 @@ func (s *Service) CollectFrom(ctx context.Context, c Collector, query SearchQuer
 }
 
 // CollectAll executa a coleta de múltiplos portais concorrentemente usando errgroup com limite de paralelismo.
-// Falhas em coletores individuais não abortam a execução dos demais, sendo consolidadas no relatório de métricas.
+// Falhas em coletores isolados não abortam a execução dos demais, sendo consolidadas no relatório de métricas.
 func (s *Service) CollectAll(ctx context.Context, collectors []Collector, query SearchQuery, concurrency int) (BatchMetrics, error) {
 	if concurrency <= 0 {
 		concurrency = 3

@@ -61,7 +61,7 @@ func NewDomainRateLimiter(cfg RateLimiterConfig, logger *slog.Logger) *DomainRat
 	}
 }
 
-// Wait aguarda o momento permitido para enviar requisições ao domínio especificado.
+// Wait aguarda liberação de taxa para enviar requisições ao domínio especificado.
 func (d *DomainRateLimiter) Wait(ctx context.Context, host string) error {
 	limiter := d.getLimiter(host)
 
@@ -151,7 +151,7 @@ func (t *RateLimitedTransport) RoundTrip(req *http.Request) (*http.Response, err
 	return t.base.RoundTrip(req)
 }
 
-// RetryTransport intercepta requisições HTTP e retenta falhas transitórias com backoff exponencial.
+// RetryTransport intercepta requisições HTTP e retenta falhas transitórias com backoff escalonado.
 type RetryTransport struct {
 	base              http.RoundTripper
 	maxRetries        int
@@ -274,7 +274,7 @@ func (t *RetryTransport) calculateBackoff(attempt int, retryAfter time.Duration)
 		return retryAfter
 	}
 
-	// Backoff exponencial com jitter de 20%
+	// Backoff com jitter de 20%
 	multiplier := 1 << attempt
 	delay := t.initialRetryDelay * time.Duration(multiplier)
 

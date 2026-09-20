@@ -13,6 +13,11 @@ linters:
         - duplicados
         - processo
         - processos
+        - momento
+        - exponencial
+        - individuais
+        - progressivo
+        - progressivos
   exclusions:
     generated: lax
     presets:
