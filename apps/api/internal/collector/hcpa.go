@@ -91,7 +91,7 @@ func (c *HCPACollector) Collect(ctx context.Context, query SearchQuery) ([]RawJo
 func (c *HCPACollector) parseHTML(body []byte, query SearchQuery) ([]RawJob, error) {
 	matches := hcpaLinkRegex.FindAllSubmatch(body, -1)
 	if len(matches) == 0 {
-		return nil, fmt.Errorf("não foi possível localizar os processos seletivos no portal do HCPA (layout alterado)")
+		return nil, fmt.Errorf("não foi possível localizar os editais no portal do HCPA (layout alterado)")
 	}
 
 	normalizedQuery := job.NormalizeText(query.Query)
@@ -106,7 +106,7 @@ func (c *HCPACollector) parseHTML(body []byte, query SearchQuery) ([]RawJob, err
 		lowerText := strings.ToLower(text)
 		lowerLink := strings.ToLower(link)
 
-		// Filtra apenas links relacionados a editais, processos seletivos públicos ou concursos do HCPA
+		// Filtra apenas links relacionados a editais, seleções públicas ou concursos do HCPA
 		isEdital := strings.Contains(lowerText, "edital") || strings.Contains(lowerText, "pss") || strings.Contains(lowerText, "processo seletivo")
 		isRelevantLink := strings.Contains(lowerLink, "faurgs") || strings.Contains(lowerLink, "concursos") || strings.Contains(lowerLink, "processo-seletivo")
 

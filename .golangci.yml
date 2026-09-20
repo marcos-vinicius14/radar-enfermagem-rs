@@ -11,6 +11,8 @@ linters:
         - duplicatas
         - duplicado
         - duplicados
+        - processo
+        - processos
   exclusions:
     generated: lax
     presets:

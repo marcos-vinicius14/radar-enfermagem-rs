@@ -23,7 +23,7 @@ func TestHCPACollector_LiveE2E(t *testing.T) {
 	}
 
 	if len(jobs) == 0 {
-		t.Fatalf("nenhum edital/processo seletivo foi extraído do portal real do HCPA (possível mudança de estrutura)")
+		t.Fatalf("nenhum edital ou seleção pública foi extraído do portal real do HCPA (possível mudança de estrutura)")
 	}
 
 	first := jobs[0]
@@ -37,7 +37,7 @@ func TestHCPACollector_LiveE2E(t *testing.T) {
 		t.Errorf("SourceURL vazio no primeiro edital extraído")
 	}
 
-	t.Logf("Sucesso E2E Live: %d editais/processos seletivos extraídos do HCPA. Primeiro: [%s] %s (%s)",
+	t.Logf("Sucesso E2E Live: %d editais/seleções extraídos do HCPA. Primeiro: [%s] %s (%s)",
 		len(jobs), first.ExternalID, first.Title, first.City)
 }
 
