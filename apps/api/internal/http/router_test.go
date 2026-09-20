@@ -26,7 +26,7 @@ func testLogger() *slog.Logger {
 }
 
 func TestHealthEndpoint(t *testing.T) {
-	router := internalhttp.NewRouter(testLogger(), &mockDB{})
+	router := internalhttp.NewRouter(testLogger(), &mockDB{}, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	rec := httptest.NewRecorder()
@@ -51,7 +51,7 @@ func TestHealthEndpoint(t *testing.T) {
 }
 
 func TestReadyEndpoint_HealthyDB(t *testing.T) {
-	router := internalhttp.NewRouter(testLogger(), &mockDB{pingErr: nil})
+	router := internalhttp.NewRouter(testLogger(), &mockDB{pingErr: nil}, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/ready", nil)
 	rec := httptest.NewRecorder()
@@ -76,7 +76,7 @@ func TestReadyEndpoint_HealthyDB(t *testing.T) {
 }
 
 func TestReadyEndpoint_UnhealthyDB(t *testing.T) {
-	router := internalhttp.NewRouter(testLogger(), &mockDB{pingErr: errors.New("connection refused")})
+	router := internalhttp.NewRouter(testLogger(), &mockDB{pingErr: errors.New("connection refused")}, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/ready", nil)
 	rec := httptest.NewRecorder()
@@ -101,7 +101,7 @@ func TestReadyEndpoint_UnhealthyDB(t *testing.T) {
 }
 
 func TestRecoverer_HandlesPanicGracefully(t *testing.T) {
-	router := internalhttp.NewRouter(testLogger(), &mockDB{})
+	router := internalhttp.NewRouter(testLogger(), &mockDB{}, nil)
 
 	// Add panic route for testing
 	panicHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -121,7 +121,7 @@ func TestRecoverer_HandlesPanicGracefully(t *testing.T) {
 }
 
 func TestNotFoundHandler(t *testing.T) {
-	router := internalhttp.NewRouter(testLogger(), &mockDB{})
+	router := internalhttp.NewRouter(testLogger(), &mockDB{}, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/non-existent-route", nil)
 	rec := httptest.NewRecorder()

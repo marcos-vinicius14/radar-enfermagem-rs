@@ -223,3 +223,91 @@ UPDATE jobs
 SET status = 'EXPIRED', updated_at = NOW()
 WHERE status = 'UNKNOWN' AND last_seen_at < sqlc.arg(before_time);
 
+-- name: SearchJobs :many
+SELECT
+    id,
+    external_id,
+    title,
+    company,
+    description,
+    city,
+    state,
+    source,
+    source_url,
+    fingerprint,
+    work_mode,
+    employment_type,
+    salary_min,
+    salary_max,
+    published_at,
+    collected_at,
+    last_seen_at,
+    status,
+    created_at,
+    updated_at
+FROM jobs
+WHERE
+    (sqlc.narg('query')::text IS NULL OR (
+        title ILIKE '%' || sqlc.narg('query')::text || '%'
+        OR company ILIKE '%' || sqlc.narg('query')::text || '%'
+        OR description ILIKE '%' || sqlc.narg('query')::text || '%'
+    ))
+    AND (sqlc.narg('city')::text IS NULL OR city ILIKE '%' || sqlc.narg('city')::text || '%')
+    AND (sqlc.narg('state')::text IS NULL OR state ILIKE sqlc.narg('state')::text)
+    AND (sqlc.narg('company')::text IS NULL OR company ILIKE '%' || sqlc.narg('company')::text || '%')
+    AND (sqlc.narg('source')::text IS NULL OR source = sqlc.narg('source')::text)
+    AND (sqlc.narg('status')::text IS NULL OR status = sqlc.narg('status')::text)
+    AND (sqlc.narg('published_since')::timestamptz IS NULL OR published_at >= sqlc.narg('published_since')::timestamptz)
+    AND (sqlc.narg('published_until')::timestamptz IS NULL OR published_at <= sqlc.narg('published_until')::timestamptz)
+ORDER BY published_at DESC NULLS LAST, id DESC
+LIMIT sqlc.arg('limit_count') OFFSET sqlc.arg('offset_count');
+
+-- name: CountSearchJobs :one
+SELECT COUNT(*)
+FROM jobs
+WHERE
+    (sqlc.narg('query')::text IS NULL OR (
+        title ILIKE '%' || sqlc.narg('query')::text || '%'
+        OR company ILIKE '%' || sqlc.narg('query')::text || '%'
+        OR description ILIKE '%' || sqlc.narg('query')::text || '%'
+    ))
+    AND (sqlc.narg('city')::text IS NULL OR city ILIKE '%' || sqlc.narg('city')::text || '%')
+    AND (sqlc.narg('state')::text IS NULL OR state ILIKE sqlc.narg('state')::text)
+    AND (sqlc.narg('company')::text IS NULL OR company ILIKE '%' || sqlc.narg('company')::text || '%')
+    AND (sqlc.narg('source')::text IS NULL OR source = sqlc.narg('source')::text)
+    AND (sqlc.narg('status')::text IS NULL OR status = sqlc.narg('status')::text)
+    AND (sqlc.narg('published_since')::timestamptz IS NULL OR published_at >= sqlc.narg('published_since')::timestamptz)
+    AND (sqlc.narg('published_until')::timestamptz IS NULL OR published_at <= sqlc.narg('published_until')::timestamptz);
+
+-- name: ListCompanies :many
+SELECT
+    company AS name,
+    COUNT(*)::bigint AS total_jobs
+FROM jobs
+WHERE (sqlc.narg('status')::text IS NULL OR status = sqlc.narg('status')::text)
+  AND company != ''
+GROUP BY company
+ORDER BY company ASC;
+
+-- name: ListCities :many
+SELECT
+    city,
+    state,
+    COUNT(*)::bigint AS total_jobs
+FROM jobs
+WHERE (sqlc.narg('status')::text IS NULL OR status = sqlc.narg('status')::text)
+  AND city != ''
+GROUP BY city, state
+ORDER BY city ASC, state ASC;
+
+-- name: ListSources :many
+SELECT
+    source,
+    COUNT(*)::bigint AS total_jobs
+FROM jobs
+WHERE (sqlc.narg('status')::text IS NULL OR status = sqlc.narg('status')::text)
+  AND source != ''
+GROUP BY source
+ORDER BY source ASC;
+
+

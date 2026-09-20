@@ -36,6 +36,18 @@ func (m *mockRepo) FindByFingerprint(ctx context.Context, fingerprint string) (j
 func (m *mockRepo) List(ctx context.Context, params job.ListParams) ([]job.Job, error) {
 	return nil, nil
 }
+func (m *mockRepo) Search(ctx context.Context, params job.FilterParams) (job.PaginatedJobs, error) {
+	return job.PaginatedJobs{}, nil
+}
+func (m *mockRepo) ListCompanies(ctx context.Context, status string) ([]job.CompanyStat, error) {
+	return nil, nil
+}
+func (m *mockRepo) ListCities(ctx context.Context, status string) ([]job.CityStat, error) {
+	return nil, nil
+}
+func (m *mockRepo) ListSources(ctx context.Context, status string) ([]job.SourceStat, error) {
+	return nil, nil
+}
 func (m *mockRepo) UpdateLastSeen(ctx context.Context, id uuid.UUID, lastSeenAt time.Time) error {
 	return nil
 }

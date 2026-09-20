@@ -23,6 +23,51 @@ func (q *Queries) CountJobs(ctx context.Context) (int64, error) {
 	return count, err
 }
 
+const countSearchJobs = `-- name: CountSearchJobs :one
+SELECT COUNT(*)
+FROM jobs
+WHERE
+    ($1::text IS NULL OR (
+        title ILIKE '%' || $1::text || '%'
+        OR company ILIKE '%' || $1::text || '%'
+        OR description ILIKE '%' || $1::text || '%'
+    ))
+    AND ($2::text IS NULL OR city ILIKE '%' || $2::text || '%')
+    AND ($3::text IS NULL OR state ILIKE $3::text)
+    AND ($4::text IS NULL OR company ILIKE '%' || $4::text || '%')
+    AND ($5::text IS NULL OR source = $5::text)
+    AND ($6::text IS NULL OR status = $6::text)
+    AND ($7::timestamptz IS NULL OR published_at >= $7::timestamptz)
+    AND ($8::timestamptz IS NULL OR published_at <= $8::timestamptz)
+`
+
+type CountSearchJobsParams struct {
+	Query          pgtype.Text
+	City           pgtype.Text
+	State          pgtype.Text
+	Company        pgtype.Text
+	Source         pgtype.Text
+	Status         pgtype.Text
+	PublishedSince pgtype.Timestamptz
+	PublishedUntil pgtype.Timestamptz
+}
+
+func (q *Queries) CountSearchJobs(ctx context.Context, arg CountSearchJobsParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countSearchJobs,
+		arg.Query,
+		arg.City,
+		arg.State,
+		arg.Company,
+		arg.Source,
+		arg.Status,
+		arg.PublishedSince,
+		arg.PublishedUntil,
+	)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createJob = `-- name: CreateJob :one
 INSERT INTO jobs (
     id,
@@ -322,6 +367,80 @@ func (q *Queries) GetJobBySourceAndExternalID(ctx context.Context, arg GetJobByS
 	return i, err
 }
 
+const listCities = `-- name: ListCities :many
+SELECT
+    city,
+    state,
+    COUNT(*)::bigint AS total_jobs
+FROM jobs
+WHERE ($1::text IS NULL OR status = $1::text)
+  AND city != ''
+GROUP BY city, state
+ORDER BY city ASC, state ASC
+`
+
+type ListCitiesRow struct {
+	City      string
+	State     string
+	TotalJobs int64
+}
+
+func (q *Queries) ListCities(ctx context.Context, status pgtype.Text) ([]ListCitiesRow, error) {
+	rows, err := q.db.Query(ctx, listCities, status)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListCitiesRow
+	for rows.Next() {
+		var i ListCitiesRow
+		if err := rows.Scan(&i.City, &i.State, &i.TotalJobs); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listCompanies = `-- name: ListCompanies :many
+SELECT
+    company AS name,
+    COUNT(*)::bigint AS total_jobs
+FROM jobs
+WHERE ($1::text IS NULL OR status = $1::text)
+  AND company != ''
+GROUP BY company
+ORDER BY company ASC
+`
+
+type ListCompaniesRow struct {
+	Name      string
+	TotalJobs int64
+}
+
+func (q *Queries) ListCompanies(ctx context.Context, status pgtype.Text) ([]ListCompaniesRow, error) {
+	rows, err := q.db.Query(ctx, listCompanies, status)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListCompaniesRow
+	for rows.Next() {
+		var i ListCompaniesRow
+		if err := rows.Scan(&i.Name, &i.TotalJobs); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listJobs = `-- name: ListJobs :many
 SELECT
     id,
@@ -395,6 +514,42 @@ func (q *Queries) ListJobs(ctx context.Context, arg ListJobsParams) ([]Job, erro
 	return items, nil
 }
 
+const listSources = `-- name: ListSources :many
+SELECT
+    source,
+    COUNT(*)::bigint AS total_jobs
+FROM jobs
+WHERE ($1::text IS NULL OR status = $1::text)
+  AND source != ''
+GROUP BY source
+ORDER BY source ASC
+`
+
+type ListSourcesRow struct {
+	Source    string
+	TotalJobs int64
+}
+
+func (q *Queries) ListSources(ctx context.Context, status pgtype.Text) ([]ListSourcesRow, error) {
+	rows, err := q.db.Query(ctx, listSources, status)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListSourcesRow
+	for rows.Next() {
+		var i ListSourcesRow
+		if err := rows.Scan(&i.Source, &i.TotalJobs); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const markJobsExpired = `-- name: MarkJobsExpired :execrows
 UPDATE jobs
 SET status = 'EXPIRED', updated_at = NOW()
@@ -421,6 +576,111 @@ func (q *Queries) MarkJobsUnknown(ctx context.Context, beforeTime pgtype.Timesta
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const searchJobs = `-- name: SearchJobs :many
+SELECT
+    id,
+    external_id,
+    title,
+    company,
+    description,
+    city,
+    state,
+    source,
+    source_url,
+    fingerprint,
+    work_mode,
+    employment_type,
+    salary_min,
+    salary_max,
+    published_at,
+    collected_at,
+    last_seen_at,
+    status,
+    created_at,
+    updated_at
+FROM jobs
+WHERE
+    ($1::text IS NULL OR (
+        title ILIKE '%' || $1::text || '%'
+        OR company ILIKE '%' || $1::text || '%'
+        OR description ILIKE '%' || $1::text || '%'
+    ))
+    AND ($2::text IS NULL OR city ILIKE '%' || $2::text || '%')
+    AND ($3::text IS NULL OR state ILIKE $3::text)
+    AND ($4::text IS NULL OR company ILIKE '%' || $4::text || '%')
+    AND ($5::text IS NULL OR source = $5::text)
+    AND ($6::text IS NULL OR status = $6::text)
+    AND ($7::timestamptz IS NULL OR published_at >= $7::timestamptz)
+    AND ($8::timestamptz IS NULL OR published_at <= $8::timestamptz)
+ORDER BY published_at DESC NULLS LAST, id DESC
+LIMIT $10 OFFSET $9
+`
+
+type SearchJobsParams struct {
+	Query          pgtype.Text
+	City           pgtype.Text
+	State          pgtype.Text
+	Company        pgtype.Text
+	Source         pgtype.Text
+	Status         pgtype.Text
+	PublishedSince pgtype.Timestamptz
+	PublishedUntil pgtype.Timestamptz
+	OffsetCount    int32
+	LimitCount     int32
+}
+
+func (q *Queries) SearchJobs(ctx context.Context, arg SearchJobsParams) ([]Job, error) {
+	rows, err := q.db.Query(ctx, searchJobs,
+		arg.Query,
+		arg.City,
+		arg.State,
+		arg.Company,
+		arg.Source,
+		arg.Status,
+		arg.PublishedSince,
+		arg.PublishedUntil,
+		arg.OffsetCount,
+		arg.LimitCount,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Job
+	for rows.Next() {
+		var i Job
+		if err := rows.Scan(
+			&i.ID,
+			&i.ExternalID,
+			&i.Title,
+			&i.Company,
+			&i.Description,
+			&i.City,
+			&i.State,
+			&i.Source,
+			&i.SourceUrl,
+			&i.Fingerprint,
+			&i.WorkMode,
+			&i.EmploymentType,
+			&i.SalaryMin,
+			&i.SalaryMax,
+			&i.PublishedAt,
+			&i.CollectedAt,
+			&i.LastSeenAt,
+			&i.Status,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateJob = `-- name: UpdateJob :one
