@@ -1,7 +1,7 @@
 -include .env
 export
 
-.PHONY: help test test-unit test-integration test-e2e test-cover lint up down logs migrate-up migrate-down sqlc collect collect-persist collect-json run build deploy
+.PHONY: help test test-unit test-integration test-e2e test-cover lint up down logs migrate-up migrate-down sqlc collect collect-persist collect-json run build deploy release
 
 help: ## Exibe os comandos disponíveis
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -64,3 +64,23 @@ deploy: up migrate-up ## Sobe o banco, aplica migrações e popula as vagas
 	@echo "==> Executando coleta e persistência inicial..."
 	cd apps/api && go run ./cmd/collector -collector=all -persist
 	@echo "==> Deploy concluído com sucesso!"
+
+release: ## Cria tag SemVer e publica GitHub Release (uso: make release VERSION=v1.0.0 [TITLE="..."])
+	@if [ -z "$(VERSION)" ]; then \
+		echo "❌ Erro: informe a versão. Exemplo: make release VERSION=v1.0.0"; \
+		exit 1; \
+	fi
+	@if ! echo "$(VERSION)" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$$'; then \
+		echo "❌ Erro: formato de versão inválido '$(VERSION)'. Use o padrão SemVer (ex: v1.0.0, v1.0.1-rc.1)"; \
+		exit 1; \
+	fi
+	@current_branch=$$(git branch --show-current); \
+	if [ "$$current_branch" != "main" ]; then \
+		echo "⚠️  Aviso: você está na branch '$$current_branch'. Releases para produção devem preferencialmente ser publicadas a partir da branch 'main'."; \
+	fi
+	@echo "🔍 Executando validação de linter e testes antes de gerar a release..."
+	$(MAKE) lint
+	$(MAKE) test
+	@echo "🚀 Criando tag $(VERSION) e publicando GitHub Release..."
+	gh release create $(VERSION) --title "$(if $(TITLE),$(TITLE),$(VERSION))" --generate-notes
+	@echo "✅ Release $(VERSION) publicada com sucesso! O workflow de deploy foi disparado no GitHub Actions."
