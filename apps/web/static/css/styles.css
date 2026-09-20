@@ -132,6 +132,27 @@ a:hover {
   flex-direction: column;
 }
 
+.brand-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.badge-beta {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-full);
+  background-color: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FCD34D;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
 .brand-name {
   font-size: 1.15rem;
   font-weight: 700;
@@ -175,6 +196,45 @@ a:hover {
 @keyframes pulse {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.4); opacity: 0.5; }
+}
+
+/* ==========================================================================
+   Banner Informativo de Versão Beta
+   ========================================================================== */
+.beta-banner {
+  background-color: #F0FDF4;
+  border-bottom: 1px solid #DCFCE7;
+  padding: 0.5rem 1rem;
+}
+
+.beta-banner-container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  line-height: 1.4;
+}
+
+.beta-banner-icon {
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.beta-banner-text {
+  font-size: 0.8rem;
+  color: #14532D;
+}
+
+.beta-banner-text a {
+  color: #0D7A68;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.beta-banner-text a:hover {
+  color: #095246;
 }
 
 /* ==========================================================================
@@ -761,12 +821,12 @@ a:hover {
 }
 
 /* ==========================================================================
-   Footer
+   Footer Estruturado & Aviso Legal
    ========================================================================== */
 .site-footer {
   background-color: var(--color-surface);
   border-top: 1px solid var(--color-border);
-  padding: 2rem 1rem;
+  padding: 2.5rem 1rem 2rem;
   margin-top: auto;
 }
 
@@ -775,18 +835,110 @@ a:hover {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  text-align: center;
+  gap: 1.5rem;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+}
+
+.footer-brand-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.footer-brand-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--color-primary);
+}
+
+.footer-mission {
   font-size: 0.825rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+  max-width: 600px;
+}
+
+.footer-license {
+  font-size: 0.775rem;
+  color: var(--color-text-subtle);
+}
+
+.footer-license a {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.footer-col-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.footer-links-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.footer-links-list li a {
+  font-size: 0.8rem;
   color: var(--color-text-muted);
 }
 
-.footer-disclaimer {
-  max-width: 760px;
-  margin: 0 auto;
-  color: var(--color-text-subtle);
+.footer-links-list li a:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.footer-disclaimer-card {
+  background-color: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+}
+
+.disclaimer-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+}
+
+.disclaimer-text {
   font-size: 0.75rem;
+  color: var(--color-text-muted);
   line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+
+.disclaimer-removal {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.disclaimer-removal a {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.footer-bottom-bar {
+  border-top: 1px solid var(--color-border);
+  padding-top: 1rem;
+  font-size: 0.75rem;
+  color: var(--color-text-subtle);
+  text-align: center;
 }
 
 /* ==========================================================================
