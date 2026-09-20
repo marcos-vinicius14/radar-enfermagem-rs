@@ -17,6 +17,7 @@ func TestLoad_Defaults(t *testing.T) {
 		"ENABLE_SCHEDULER", "COLLECTOR_CRON_SCHEDULE", "COLLECTOR_CONCURRENCY",
 		"COLLECTOR_RATE_LIMIT_RPS", "COLLECTOR_RATE_LIMIT_BURST",
 		"COLLECTOR_STATUS_UNKNOWN_HOURS", "COLLECTOR_STATUS_EXPIRED_HOURS",
+		"COLLECTOR_RUN_ON_STARTUP",
 	}
 	for _, env := range envVars {
 		_ = os.Unsetenv(env)
@@ -81,6 +82,9 @@ func TestLoad_Defaults(t *testing.T) {
 	if cfg.CollectorStatusExpiredHours != 168 {
 		t.Errorf("expected CollectorStatusExpiredHours 168, got: %d", cfg.CollectorStatusExpiredHours)
 	}
+	if cfg.CollectorRunOnStartup != false {
+		t.Errorf("expected CollectorRunOnStartup false, got: %v", cfg.CollectorRunOnStartup)
+	}
 }
 
 func TestLoad_CustomEnv(t *testing.T) {
@@ -103,6 +107,7 @@ func TestLoad_CustomEnv(t *testing.T) {
 	t.Setenv("COLLECTOR_RATE_LIMIT_BURST", "10")
 	t.Setenv("COLLECTOR_STATUS_UNKNOWN_HOURS", "48")
 	t.Setenv("COLLECTOR_STATUS_EXPIRED_HOURS", "336")
+	t.Setenv("COLLECTOR_RUN_ON_STARTUP", "true")
 
 	cfg, err := config.Load()
 	if err != nil {
@@ -165,6 +170,9 @@ func TestLoad_CustomEnv(t *testing.T) {
 	}
 	if cfg.CollectorStatusExpiredHours != 336 {
 		t.Errorf("expected CollectorStatusExpiredHours 336, got: %d", cfg.CollectorStatusExpiredHours)
+	}
+	if cfg.CollectorRunOnStartup != true {
+		t.Errorf("expected CollectorRunOnStartup true, got: %v", cfg.CollectorRunOnStartup)
 	}
 
 }

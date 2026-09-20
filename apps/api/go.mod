@@ -11,7 +11,10 @@ require (
 	golang.org/x/sync v0.23.0
 	golang.org/x/text v0.38.0
 	golang.org/x/time v0.16.0
+	github.com/marcos-vinicius14/radar-enfermagem-rs/apps/web v0.0.0
 )
+
+replace github.com/marcos-vinicius14/radar-enfermagem-rs/apps/web => ../web
 
 require (
 	github.com/jackc/pgerrcode v0.0.0-20220416144525-469b46aa5efa // indirect

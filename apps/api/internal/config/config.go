@@ -29,6 +29,7 @@ type Config struct {
 	CollectorRateLimitBurst     int
 	CollectorStatusUnknownHours int
 	CollectorStatusExpiredHours int
+	CollectorRunOnStartup       bool
 }
 
 func Load() (*Config, error) {
@@ -54,6 +55,7 @@ func Load() (*Config, error) {
 		CollectorRateLimitBurst:     getEnvInt("COLLECTOR_RATE_LIMIT_BURST", 5),
 		CollectorStatusUnknownHours: getEnvInt("COLLECTOR_STATUS_UNKNOWN_HOURS", 24),
 		CollectorStatusExpiredHours: getEnvInt("COLLECTOR_STATUS_EXPIRED_HOURS", 168),
+		CollectorRunOnStartup:       getEnvBool("COLLECTOR_RUN_ON_STARTUP", false),
 	}
 
 	if portStr := os.Getenv("PORT"); portStr != "" {

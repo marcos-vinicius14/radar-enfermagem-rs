@@ -1,0 +1,26 @@
+{{define "content"}}
+<main class="main-content">
+  <div class="ratelimit-box">
+    <div class="ratelimit-icon">
+      <!-- Ícone de Espera / Relógio Calmo -->
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="12 6 12 12 16 14"/>
+      </svg>
+    </div>
+
+    <h2 class="ratelimit-title">Calma aí! Muitas requisições em pouco tempo</h2>
+    <p class="ratelimit-text">
+      Detectamos muitas atualizações ou cliques seguidos a partir da sua conexão.
+      O <strong>Radar Enfermagem RS</strong> monitora e atualiza os portais hospitalares automaticamente a cada 2 horas, então não é necessário recarregar a tela repetidamente.
+    </p>
+    <p class="ratelimit-text">
+      Por favor, aguarde alguns segundos antes de tentar novamente.
+    </p>
+
+    <a href="/" class="btn btn-primary" style="display: inline-flex;">
+      <span>Tentar Novamente</span>
+    </a>
+  </div>
+</main>
+{{end}}
