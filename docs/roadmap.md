@@ -11,7 +11,7 @@ Este roadmap organiza o desenvolvimento do **Radar Enfermagem RS** em milestones
 | [Milestone 1](#milestone-1--fundação-do-projeto) | Fundação do Projeto (Monorepo, Go, Chi, Postgres 18, Migrations, Docker) | Concluída |
 | [Milestone 2](#milestone-2--domínio-e-persistência-de-vagas) | Domínio e Persistência de Vagas (`jobs`, UUIDv7, sqlc, Repository) | Concluída |
 | [Milestone 3](#milestone-3--pipeline-de-coleta) | Pipeline de Coleta (Contrato Collector, RawJob, Normalizer, Deduplicator) | Concluída |
-| [Milestone 4](#milestone-4--portais-oficiais) | Portais Oficiais (Santa Casa, Moinhos, São Lucas, Unimed, etc.) | A Fazer |
+| [Milestone 4](#milestone-4--portais-oficiais) | Portais Oficiais (Santa Casa, Moinhos, São Lucas, Unimed, etc.) | Concluída |
 | [Milestone 5](#milestone-5--scheduler-e-resiliência) | Scheduler e Resiliência (Cron, Errgroup, Rate Limiting, Retries) | A Fazer |
 | [Milestone 6](#milestone-6--api-de-consulta) | API de Consulta (Endpoints REST paginados e filtráveis) | A Fazer |
 | [Milestone 7](#milestone-7--frontend-htmx) | Frontend HTMX (Layout clean, cards, listagem e filtros dinâmicos) | A Fazer |
@@ -142,17 +142,17 @@ Este roadmap organiza o desenvolvimento do **Radar Enfermagem RS** em milestones
 
 > **Objetivo:** Adicionar todas as instituições inicialmente monitoradas. Cada collector deve respeitar o contrato, timeout, rate limit e testes de parsing.
 
-- [ ] **Task 20: Implementar collector da Santa Casa**
-- [ ] **Task 21: Implementar collector do Moinhos de Vento**
-- [ ] **Task 22: Implementar collector do Hospital São Lucas**
-- [ ] **Task 23: Implementar collector da Unimed**
-- [ ] **Task 24: Implementar collector da Doctor Clin**
-- [ ] **Task 25: Implementar collector do Fleury / Weinmann**
-- [ ] **Task 26: Implementar collector do HCPA**
-- [ ] **Task 27: Implementar collector da Divina Providência**
-- [ ] **Task 28: Implementar collector do Hospital Mãe de Deus**
-- [ ] **Task 29: Criar collectors reutilizáveis por provedor**
-  - [ ] Abstrair integrações compartilhadas (ex: Gupy, endpoints JSON padrão) evitando duplicação
+- [x] **Task 20: Implementar collector da Santa Casa**
+- [x] **Task 21: Implementar collector do Moinhos de Vento**
+- [x] **Task 22: Implementar collector do Hospital São Lucas**
+- [x] **Task 23: Implementar collector da Unimed**
+- [x] **Task 24: Implementar collector da Doctor Clin**
+- [x] **Task 25: Implementar collector do Fleury / Weinmann**
+- [x] **Task 26: Implementar collector do HCPA**
+- [x] **Task 27: Implementar collector da Divina Providência**
+- [x] **Task 28: Implementar collector do Hospital Mãe de Deus**
+- [x] **Task 29: Criar collectors reutilizáveis por provedor**
+  - [x] Abstrair integrações compartilhadas (Gupy, Senior Sistemas, Vagas.com) evitando duplicação
 
 ---
 
