@@ -112,7 +112,7 @@ func (h *WebHandler) renderJobsPageOrFragment(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// 2. Mecanismo de Cache ETag e Validação Condicional contra F5 excessivo
+	// 2. Mecanismo de Cache ETag e validação HTTP contra F5 excessivo
 	etag := calculateETag(paginated, filterParams)
 	if match := r.Header.Get("If-None-Match"); match != "" && match == etag {
 		w.WriteHeader(http.StatusNotModified)
@@ -204,10 +204,10 @@ func (h *WebHandler) renderJobsPageOrFragment(w http.ResponseWriter, r *http.Req
 
 func calculateETag(paginated job.PaginatedJobs, params job.FilterParams) string {
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("%d-%d-%d-q:%s-c:%s-co:%s", paginated.Total, paginated.Page, len(paginated.Items), params.Query, params.City, params.Company))
+	fmt.Fprintf(&sb, "%d-%d-%d-q:%s-c:%s-co:%s", paginated.Total, paginated.Page, len(paginated.Items), params.Query, params.City, params.Company)
 	if len(paginated.Items) > 0 {
 		first := paginated.Items[0]
-		sb.WriteString(fmt.Sprintf("-f:%s-%s", first.ID.String(), first.UpdatedAt.Format(time.RFC3339Nano)))
+		fmt.Fprintf(&sb, "-f:%s-%s", first.ID.String(), first.UpdatedAt.Format(time.RFC3339Nano))
 	}
 	hash := sha256.Sum256([]byte(sb.String()))
 	return `"` + hex.EncodeToString(hash[:8]) + `"`
