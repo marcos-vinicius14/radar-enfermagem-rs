@@ -50,7 +50,7 @@ func main() {
 	}
 
 	var sched *scheduler.Scheduler
-	if cfg.EnableScheduler && db != nil {
+	if (cfg.EnableScheduler || cfg.CollectorRunOnStartup) && db != nil {
 		httpClient := collector.NewResilientHTTPClient(collector.ResilientClientConfig{
 			Timeout:           20 * time.Second,
 			MaxRetries:        3,
@@ -74,14 +74,37 @@ func main() {
 		if err != nil {
 			log.Error("failed to create collector scheduler", "error", err)
 		} else {
-			if err := schedInstance.Start(context.Background()); err != nil {
-				log.Error("failed to start collector scheduler", "error", err)
-			} else {
-				sched = schedInstance
-				log.Info("collector scheduler started in background",
-					"cron_schedule", cfg.CollectorCronSchedule,
-					"concurrency", cfg.CollectorConcurrency,
-				)
+			sched = schedInstance
+
+			if cfg.EnableScheduler {
+				if err := schedInstance.Start(context.Background()); err != nil {
+					log.Error("failed to start collector scheduler", "error", err)
+				} else {
+					log.Info("collector scheduler started in background",
+						"cron_schedule", cfg.CollectorCronSchedule,
+						"concurrency", cfg.CollectorConcurrency,
+					)
+				}
+			}
+
+			if cfg.CollectorRunOnStartup {
+				go func() {
+					log.Info("executando coleta inicial de vagas no startup...")
+					startupCtx, startupCancel := context.WithTimeout(context.Background(), 5*time.Minute)
+					defer startupCancel()
+
+					metrics, err := schedInstance.TriggerNow(startupCtx)
+					if err != nil {
+						log.Error("falha na coleta inicial de startup", "erro", err)
+					} else {
+						log.Info("coleta inicial de startup concluida com sucesso",
+							"total_encontradas", metrics.TotalFound,
+							"total_inseridas", metrics.TotalInserted,
+							"total_atualizadas", metrics.TotalUpdated,
+							"duracao", metrics.Duration.String(),
+						)
+					}
+				}()
 			}
 		}
 	}

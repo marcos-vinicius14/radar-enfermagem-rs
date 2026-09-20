@@ -11,6 +11,8 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/job"
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/logger"
+	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/web"
+	"golang.org/x/time/rate"
 )
 
 // DB define o contrato mínimo para checagem de saúde da base de dados.
@@ -18,21 +20,47 @@ type DB interface {
 	Ping(ctx context.Context) error
 }
 
-// NewRouter cria e configura o roteador Chi com middlewares e rotas padrão.
+// NewRouter cria e configura o roteador Chi com middlewares, observabilidade, rotas web e API.
 func NewRouter(l *slog.Logger, db DB, jobRepo job.Repository) http.Handler {
+	if l == nil {
+		l = slog.Default()
+	}
+
 	r := chi.NewRouter()
 
-	// Middlewares essenciais
+	// 1. Inicializa o ViewEngine de templates HTML embutidos
+	view, err := web.NewViewEngine()
+	if err != nil {
+		l.Error("falha crítica ao inicializar view engine dos templates HTML", "erro", err)
+	}
+
+	// 2. Middlewares essenciais
 	r.Use(middleware.RequestID)
 	r.Use(logger.Middleware(l))
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	// Rotas de observabilidade
+	// 3. Middleware de Rate Limiting por IP (Token Bucket contra F5 e cliques múltiplos)
+	rateLimiter := NewIPRateLimiter(rate.Limit(5), 15, view, l)
+	r.Use(rateLimiter.Middleware())
+
+	// 4. Rotas de observabilidade
 	r.Get("/health", handleHealth)
 	r.Get("/ready", handleReady(db))
 
-	// Rotas da API v1
+	// 5. Arquivos estáticos (CSS, JS, Favicon com cache imutável)
+	staticFileServer := http.StripPrefix("/static/", http.FileServer(web.StaticFS()))
+	r.Get("/static/*", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "public, max-age=86400, immutable")
+		staticFileServer.ServeHTTP(w, r)
+	})
+
+	// 6. Rotas do Frontend Web HTMX
+	webHandler := NewWebHandler(jobRepo, view, l)
+	r.Get("/", webHandler.HandleHome)
+	r.Get("/jobs", webHandler.HandleJobs)
+
+	// 7. Rotas da API v1 JSON
 	jobsHandler := NewJobsHandler(jobRepo, l)
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Get("/jobs", jobsHandler.ListJobs)
@@ -42,7 +70,7 @@ func NewRouter(l *slog.Logger, db DB, jobRepo job.Repository) http.Handler {
 		r.Get("/sources", jobsHandler.ListSources)
 	})
 
-	// 404 Handler em JSON
+	// 8. 404 Handler
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusNotFound, "recurso não encontrado")
 	})

@@ -1,0 +1,67 @@
+{{if gt .TotalPages 1}}
+<nav class="pagination-container" aria-label="Navegação de páginas de vagas">
+  <div class="pagination-info">
+    Página <strong>{{.Page}}</strong> de <strong>{{.TotalPages}}</strong> ({{.Total}} vagas no total)
+  </div>
+
+  <div class="pagination-controls">
+    <!-- Botão Página Anterior -->
+    {{if gt .Page 1}}
+      <button type="button"
+              class="page-btn"
+              title="Página anterior"
+              hx-get="/jobs?page={{sub .Page 1}}&size={{.Size}}&query={{.Params.Query}}&city={{.Params.City}}&company={{.Params.Company}}&date={{.DateFilter}}&status={{.Params.Status}}"
+              hx-target="#jobs-container"
+              hx-swap="innerHTML show:window:top"
+              hx-push-url="true"
+              hx-disabled-elt="this"
+              hx-sync="this:replace"
+              hx-indicator="#search-indicator">
+        &lsaquo; Anterior
+      </button>
+    {{else}}
+      <button type="button" class="page-btn" disabled>&lsaquo; Anterior</button>
+    {{end}}
+
+    <!-- Botões Numerados -->
+    {{range $p := paginationRange .Page .TotalPages}}
+      {{if eq $p -1}}
+        <span class="page-ellipsis">&hellip;</span>
+      {{else if eq $p $.Page}}
+        <button type="button" class="page-btn active" aria-current="page">{{$p}}</button>
+      {{else}}
+        <button type="button"
+                class="page-btn"
+                title="Ir para a página {{$p}}"
+                hx-get="/jobs?page={{$p}}&size={{$.Size}}&query={{$.Params.Query}}&city={{$.Params.City}}&company={{$.Params.Company}}&date={{$.DateFilter}}&status={{$.Params.Status}}"
+                hx-target="#jobs-container"
+                hx-swap="innerHTML show:window:top"
+                hx-push-url="true"
+                hx-disabled-elt="this"
+                hx-sync="this:replace"
+                hx-indicator="#search-indicator">
+          {{$p}}
+        </button>
+      {{end}}
+    {{end}}
+
+    <!-- Botão Próxima Página -->
+    {{if lt .Page .TotalPages}}
+      <button type="button"
+              class="page-btn"
+              title="Próxima página"
+              hx-get="/jobs?page={{add .Page 1}}&size={{.Size}}&query={{.Params.Query}}&city={{.Params.City}}&company={{.Params.Company}}&date={{.DateFilter}}&status={{.Params.Status}}"
+              hx-target="#jobs-container"
+              hx-swap="innerHTML show:window:top"
+              hx-push-url="true"
+              hx-disabled-elt="this"
+              hx-sync="this:replace"
+              hx-indicator="#search-indicator">
+        Próxima &rsaquo;
+      </button>
+    {{else}}
+      <button type="button" class="page-btn" disabled>Próxima &rsaquo;</button>
+    {{end}}
+  </div>
+</nav>
+{{end}}

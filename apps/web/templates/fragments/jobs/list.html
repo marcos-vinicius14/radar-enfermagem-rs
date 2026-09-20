@@ -1,0 +1,29 @@
+<div id="jobs-container">
+  <div class="results-header">
+    <div class="results-count">
+      {{if gt .Total 0}}
+        Mostrando <strong>{{.Total}}</strong> {{if eq .Total 1}}vaga ativa encontrada{{else}}vagas ativas encontradas{{end}}
+      {{else}}
+        Nenhuma vaga encontrada
+      {{end}}
+    </div>
+
+    <!-- Indicador de Carregamento HTMX com Spinner -->
+    <div id="search-indicator" class="htmx-indicator">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Atualizando vagas...</span>
+    </div>
+  </div>
+
+  {{if eq (len .Items) 0}}
+    {{template "empty.html" .}}
+  {{else}}
+    <div class="jobs-list">
+      {{range .Items}}
+        {{template "card.html" .}}
+      {{end}}
+    </div>
+
+    {{template "pagination.html" .}}
+  {{end}}
+</div>

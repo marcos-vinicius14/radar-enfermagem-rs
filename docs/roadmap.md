@@ -197,20 +197,20 @@ Este roadmap organiza o desenvolvimento do **Radar Enfermagem RS** em milestones
 
 > **Objetivo:** Criar uma interface clean, minimalista e focada na busca rápida de vagas.
 
-- [ ] **Task 42: Criar layout base**
-  - [ ] Header, conteúdo principal, footer e responsividade básica
-- [ ] **Task 43: Criar página inicial**
-  - [ ] Título do projeto, barra de pesquisa, filtros, lista de vagas e contador
-- [ ] **Task 44: Criar card de vaga**
-  - [ ] Exibir título, instituição, cidade, data de publicação, especialidade, fonte e link de candidatura
-- [ ] **Task 45: Implementar listagem com HTMX**
-  - [ ] Atualização dinâmica apenas do fragment da listagem
-- [ ] **Task 46: Implementar filtros com HTMX**
-  - [ ] Filtros por cidade, instituição, especialidade, status e período
-- [ ] **Task 47: Implementar paginação com HTMX**
-  - [ ] Navegação de páginas sem reload completo
-- [ ] **Task 48: Implementar estados de interface**
-  - [ ] Estados visuais: loading, vazio, erro, sem resultados e dados carregados
+- [x] **Task 42: Criar layout base**
+  - [x] Header, conteúdo principal, footer e responsividade básica
+- [x] **Task 43: Criar página inicial**
+  - [x] Título do projeto, barra de pesquisa, filtros, lista de vagas e contador
+- [x] **Task 44: Criar card de vaga**
+  - [x] Exibir título, instituição, cidade, data de publicação, especialidade, fonte e link de candidatura
+- [x] **Task 45: Implementar listagem com HTMX**
+  - [x] Atualização dinâmica apenas do fragment da listagem
+- [x] **Task 46: Implementar filtros com HTMX**
+  - [x] Filtros por cidade, instituição, especialidade, status e período
+- [x] **Task 47: Implementar paginação com HTMX**
+  - [x] Navegação de páginas sem reload completo
+- [x] **Task 48: Implementar estados de interface**
+  - [x] Estados visuais: loading, vazio, erro, sem resultados e dados carregados
 
 ---
 

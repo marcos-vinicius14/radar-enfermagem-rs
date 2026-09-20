@@ -1,0 +1,85 @@
+<article class="job-card" id="job-{{.ID}}">
+  <div class="card-top">
+    <div class="company-group">
+      <!-- Ícone Hospitalar -->
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 21h18"/>
+        <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/>
+        <path d="M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4"/>
+        <path d="M10 9h4"/>
+        <path d="M12 7v4"/>
+      </svg>
+      <span>{{.Company}}</span>
+    </div>
+
+    <div class="card-top-badges">
+      <time class="time-badge" title="Data de publicação original">
+        <!-- Ícone Relógio -->
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span>{{timeAgo .PublishedAt}}</span>
+      </time>
+      <span class="badge-status active">Ativa</span>
+    </div>
+  </div>
+
+  <h2 class="job-title">{{.Title}}</h2>
+
+  <div class="tags-row">
+    <!-- Localização -->
+    <span class="meta-tag">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+      {{if .City}}{{.City}} / {{if .State}}{{.State}}{{else}}RS{{end}}{{else}}Porto Alegre e Região{{end}}
+    </span>
+
+    <!-- Especialidade (se detectada) -->
+    {{$spec := extractSpecialty .Title}}
+    {{if $spec}}
+      <span class="meta-tag specialty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+        {{$spec}}
+      </span>
+    {{end}}
+
+    <!-- Regime / Modalidade -->
+    <span class="meta-tag">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+      </svg>
+      {{formatWorkMode .WorkMode}} ({{formatEmploymentType .EmploymentType}})
+    </span>
+
+    <!-- Salário -->
+    <span class="meta-tag salary">
+      {{formatSalary .SalaryMin .SalaryMax}}
+    </span>
+
+    <!-- Fonte Coletora -->
+    <span class="meta-tag source" title="Portal de onde a vaga foi coletada">
+      Fonte: {{formatSource .Source}}
+    </span>
+  </div>
+
+  {{if .Description}}
+    <p class="job-snippet">{{.Description}}</p>
+  {{end}}
+
+  <div class="card-footer">
+    <a href="{{.SourceURL}}" target="_blank" rel="noopener noreferrer" class="btn btn-apply">
+      <span>Candidatar-se no Portal Oficial</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+        <polyline points="15 3 21 3 21 9"/>
+        <line x1="10" y1="14" x2="21" y2="3"/>
+      </svg>
+    </a>
+  </div>
+</article>
