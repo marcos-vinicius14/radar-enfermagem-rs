@@ -13,8 +13,8 @@ Este roadmap organiza o desenvolvimento do **Radar Enfermagem RS** em milestones
 | [Milestone 3](#milestone-3--pipeline-de-coleta) | Pipeline de Coleta (Contrato Collector, RawJob, Normalizer, Deduplicator) | Concluída |
 | [Milestone 4](#milestone-4--portais-oficiais) | Portais Oficiais (Santa Casa, Moinhos, São Lucas, Unimed, etc.) | Concluída |
 | [Milestone 5](#milestone-5--scheduler-e-resiliência) | Scheduler e Resiliência (Cron, Errgroup, Rate Limiting, Retries) | Concluída |
-| [Milestone 6](#milestone-6--api-de-consulta) | API de Consulta (Endpoints REST paginados e filtráveis) | A Fazer |
-| [Milestone 7](#milestone-7--frontend-htmx) | Frontend HTMX (Layout clean, cards, listagem e filtros dinâmicos) | A Fazer |
+| [Milestone 6](#milestone-6--api-de-consulta) | API de Consulta (Endpoints REST paginados e filtráveis) | Concluída |
+| [Milestone 7](#milestone-7--frontend-htmx) | Frontend HTMX (Layout clean, cards, listagem e filtros dinâmicos) | Concluída |
 | [Milestone 8](#milestone-8--full-text-search) | Full Text Search (Busca textual nativa com PostgreSQL GIN) | A Fazer |
 | [Milestone 9](#milestone-9--barra-de-pesquisa) | Barra de Pesquisa (Debounce, ranking por relevância com HTMX) | A Fazer |
 | [Milestone 10](#milestone-10--agregadores) | Agregadores (LinkedIn, Indeed, InfoJobs, Jobbol) | A Fazer |
@@ -308,3 +308,35 @@ Este roadmap organiza o desenvolvimento do **Radar Enfermagem RS** em milestones
 | **P0 — Essencial (MVP)** | Validação do produto principal | Fundação, Banco, Domínio, Collectors Oficiais, Scheduler, API, Listagem, Filtros, Full Text Search, Barra de Pesquisa |
 | **P1 — Estabilização** | Confiabilidade e escala | Métricas, Melhorias de UX, Agregadores, Testes de Integração, CI/CD |
 | **P2 — Pós-MVP** | Recursos adicionais | Autenticação, Favoritos, Alertas, Notificações, Expansão Geográfica e Profissional |
+
+---
+
+## 🏁 Critérios para o Fim do Beta e Lançamento Oficial (v1.0.0 / GA)
+
+> **Diretriz de Escopo:** Não é necessário atingir todas as 12 milestones para declarar o encerramento do Beta. Recursos como autenticação de usuários, favoritos e alertas (Milestone 12) pertencem ao ciclo contínuo de evolução de um produto já estável (Pós-v1.0.0).
+
+O encerramento do **Beta** e o lançamento oficial da versão **`v1.0.0` (General Availability)** exigem o cumprimento de **3 Pilares de Confiabilidade**:
+
+### 1. Escopo Central Concluído (Core Search)
+- [ ] **Milestone 8 (Full Text Search):** Busca textual nativa via índice GIN no PostgreSQL (`search_vector`, `ts_rank`);
+- [ ] **Milestone 9 (Barra de Pesquisa):** Input com *debounce* e atualização dinâmica de fragmentos via HTMX sem reload da página.
+
+### 2. Integridade e Precisão dos Dados (Zero Falsos Positivos)
+- [ ] **Resolução da [Issue #15](https://github.com/marcos-vinicius14/radar-enfermagem-rs/issues/15):** Filtro de domínio rigoroso para impedir que vagas fora da área de enfermagem (ex.: arquitetos, cargos administrativos ou acadêmicos) sejam ingeridas;
+- [ ] **Resolução da [Issue #14](https://github.com/marcos-vinicius14/radar-enfermagem-rs/issues/14):** Correção do estado ativo (background visual selecionado) nos botões de filtro.
+
+### 3. Estabilidade Operacional Comprovada
+- [ ] Rotina de coleta automatizada executando em produção (Coolify) sem falhas de conexão ou timeouts por pelo menos 1 a 2 semanas consecutivas;
+- [ ] Cobertura de testes de integração e documentação operacional de troubleshooting (Milestone 11).
+
+---
+
+### 📌 Ciclo de Versões & Marcos do Produto
+
+| Versão | Fase | O que contempla |
+| :--- | :--- | :--- |
+| **`v0.2.0` (Atual)** | **Beta Aberto** | Fundação, Coletores Oficiais, API REST, Interface Web HTMX, Governança Open Source (AGPLv3) e aviso visual Beta. |
+| **`v0.3.0` a `v0.9.0`** | **Beta em Refinamento** | Correção das Issues #14 e #15, Full Text Search (M8), Barra de Pesquisa (M9), testes de integração ampliados (M11). |
+| **`v1.0.0`** | **Lançamento Oficial (Fim do Beta)** | Sistema estável, busca completa, dados 100% confiáveis e remoção do selo Beta da interface. |
+| **`v1.1.0+`** | **Pós-MVP / Expansão** | Agregadores de terceiros (M10), Alertas via Telegram/E-mail, Favoritos, Login e expansão geográfica/profissional (M12). |
+
