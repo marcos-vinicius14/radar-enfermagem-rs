@@ -79,7 +79,7 @@ func (p *Pruner) Prune(ctx context.Context) (PruneResult, error) {
 					TotalChecked: totalChecked,
 					TotalPruned:  totalPruned,
 					Duration:     time.Since(start),
-				}, fmt.Errorf("deletar lote de vagas invalidas: %w", err)
+				}, fmt.Errorf("deletar lote de vagas fora de escopo: %w", err)
 			}
 			totalPruned += deleted
 		}

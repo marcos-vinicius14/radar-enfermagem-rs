@@ -18,6 +18,11 @@ linters:
         - individuais
         - progressivo
         - progressivos
+        - profissional
+        - profissionais
+        - biologia
+        - invalida
+        - invalidas
   exclusions:
     generated: lax
     presets:
