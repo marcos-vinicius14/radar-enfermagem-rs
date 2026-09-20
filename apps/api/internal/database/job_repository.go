@@ -412,6 +412,57 @@ func (r *JobRepository) ReconcileStatuses(ctx context.Context, unknownBefore, ex
 	return result, nil
 }
 
+func (r *JobRepository) DeleteByIDs(ctx context.Context, ids []uuid.UUID) (int64, error) {
+	if len(ids) == 0 {
+		return 0, nil
+	}
+	deleted, err := r.queries.DeleteJobsByIDs(ctx, ids)
+	if err != nil {
+		r.logger.ErrorContext(ctx, "falha ao deletar vagas por lote de IDs",
+			slog.Int("total_ids", len(ids)),
+			slog.String("erro", err.Error()),
+		)
+		return 0, fmt.Errorf("deletar vagas por IDs: %w", err)
+	}
+	return deleted, nil
+}
+
+func (r *JobRepository) ListActiveForPruning(ctx context.Context, limit, offset int32) ([]job.Job, error) {
+	if limit <= 0 {
+		limit = 100
+	}
+	if limit > 500 {
+		limit = 500
+	}
+	rows, err := r.queries.ListActiveJobsForPruning(ctx, db.ListActiveJobsForPruningParams{
+		Limit:  limit,
+		Offset: offset,
+	})
+	if err != nil {
+		r.logger.ErrorContext(ctx, "falha ao listar vagas ativas para expurgo",
+			slog.Int("limit", int(limit)),
+			slog.Int("offset", int(offset)),
+			slog.String("erro", err.Error()),
+		)
+		return nil, fmt.Errorf("listar vagas ativas para expurgo: %w", err)
+	}
+
+	result := make([]job.Job, 0, len(rows))
+	for _, row := range rows {
+		result = append(result, job.Job{
+			ID:          row.ID,
+			Title:       row.Title,
+			Description: row.Description,
+			City:        row.City,
+			State:       row.State,
+			Company:     row.Company,
+			Source:      row.Source,
+			Status:      job.StatusActive,
+		})
+	}
+	return result, nil
+}
+
 func toDomainJob(m db.Job) job.Job {
 	return job.Job{
 		ID:             m.ID,

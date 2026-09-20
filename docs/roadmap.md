@@ -322,7 +322,7 @@ O encerramento do **Beta** e o lançamento oficial da versão **`v1.0.0` (Genera
 - [ ] **Milestone 9 (Barra de Pesquisa):** Input com *debounce* e atualização dinâmica de fragmentos via HTMX sem reload da página.
 
 ### 2. Integridade e Precisão dos Dados (Zero Falsos Positivos)
-- [ ] **Resolução da [Issue #15](https://github.com/marcos-vinicius14/radar-enfermagem-rs/issues/15):** Filtro de domínio rigoroso para impedir que vagas fora da área de enfermagem (ex.: arquitetos, cargos administrativos ou acadêmicos) sejam ingeridas;
+- [x] **Resolução da [Issue #15](https://github.com/marcos-vinicius14/radar-enfermagem-rs/issues/15):** Filtro de domínio rigoroso para impedir que vagas fora da área de enfermagem (ex.: arquitetos, cargos administrativos ou acadêmicos) sejam ingeridas;
 - [ ] **Resolução da [Issue #14](https://github.com/marcos-vinicius14/radar-enfermagem-rs/issues/14):** Correção do estado ativo (background visual selecionado) nos botões de filtro.
 
 ### 3. Estabilidade Operacional Comprovada

@@ -30,6 +30,8 @@ type Config struct {
 	CollectorStatusUnknownHours int
 	CollectorStatusExpiredHours int
 	CollectorRunOnStartup       bool
+	PrunerCronSchedule          string
+	PrunerRunOnStartup          bool
 }
 
 func Load() (*Config, error) {
@@ -56,6 +58,8 @@ func Load() (*Config, error) {
 		CollectorStatusUnknownHours: getEnvInt("COLLECTOR_STATUS_UNKNOWN_HOURS", 24),
 		CollectorStatusExpiredHours: getEnvInt("COLLECTOR_STATUS_EXPIRED_HOURS", 168),
 		CollectorRunOnStartup:       getEnvBool("COLLECTOR_RUN_ON_STARTUP", false),
+		PrunerCronSchedule:          getEnv("PRUNER_CRON_SCHEDULE", "0 */12 * * *"),
+		PrunerRunOnStartup:          getEnvBool("PRUNER_RUN_ON_STARTUP", true),
 	}
 
 	if portStr := os.Getenv("PORT"); portStr != "" {

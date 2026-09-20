@@ -823,3 +823,68 @@ func TestJobRepository_Aggregations(t *testing.T) {
 		}
 	})
 }
+
+func TestJobRepository_DeleteByIDs_And_ListActiveForPruning(t *testing.T) {
+	dbInstance, repo := setupIntegrationTest(t)
+	if dbInstance == nil || repo == nil {
+		return
+	}
+	ctx := context.Background()
+
+	j1 := newValidTestJob("source1", "ext-1")
+	j1.Title = "Vaga Inválida 1"
+	inserted1, err := repo.Insert(ctx, j1)
+	if err != nil {
+		t.Fatalf("Insert j1 falhou: %v", err)
+	}
+
+	j2 := newValidTestJob("source2", "ext-2")
+	j2.Title = "Vaga Inválida 2"
+	inserted2, err := repo.Insert(ctx, j2)
+	if err != nil {
+		t.Fatalf("Insert j2 falhou: %v", err)
+	}
+
+	j3 := newValidTestJob("source3", "ext-3")
+	j3.Title = "Técnico de Enfermagem Válido"
+	inserted3, err := repo.Insert(ctx, j3)
+	if err != nil {
+		t.Fatalf("Insert j3 falhou: %v", err)
+	}
+
+	// 1. ListActiveForPruning deve listar os 3
+	activeJobs, err := repo.ListActiveForPruning(ctx, 10, 0)
+	if err != nil {
+		t.Fatalf("ListActiveForPruning falhou: %v", err)
+	}
+	if len(activeJobs) != 3 {
+		t.Fatalf("esperava 3 vagas ativas, obteve %d", len(activeJobs))
+	}
+
+	// 2. DeleteByIDs para j1 e j2
+	deleted, err := repo.DeleteByIDs(ctx, []uuid.UUID{inserted1.ID, inserted2.ID})
+	if err != nil {
+		t.Fatalf("DeleteByIDs falhou: %v", err)
+	}
+	if deleted != 2 {
+		t.Fatalf("esperava 2 vagas deletadas, obteve %d", deleted)
+	}
+
+	// 3. ListActiveForPruning deve retornar apenas j3
+	remaining, err := repo.ListActiveForPruning(ctx, 10, 0)
+	if err != nil {
+		t.Fatalf("ListActiveForPruning pós-delete falhou: %v", err)
+	}
+	if len(remaining) != 1 {
+		t.Fatalf("esperava 1 vaga restante, obteve %d", len(remaining))
+	}
+	if remaining[0].ID != inserted3.ID {
+		t.Fatalf("vaga restante inesperada: %v, esperava %v", remaining[0].ID, inserted3.ID)
+	}
+
+	// 4. FindByID de j1 deve retornar ErrNotFound
+	_, err = repo.FindByID(ctx, inserted1.ID)
+	if !errors.Is(err, job.ErrNotFound) {
+		t.Fatalf("esperava ErrNotFound para j1, obteve: %v", err)
+	}
+}

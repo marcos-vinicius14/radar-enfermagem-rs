@@ -76,6 +76,17 @@ func (s *Service) CollectFrom(ctx context.Context, c Collector, query SearchQuer
 	for _, raw := range rawJobs {
 		normalized, err := s.normalizer.Normalize(raw)
 		if err != nil {
+			if errors.Is(err, job.ErrNotNursingJob) || errors.Is(err, job.ErrOutOfScopeLocation) {
+				s.logger.DebugContext(ctx, "vaga descartada por estar fora do escopo de enfermagem ou localidade",
+					slog.String("collector", c.Name()),
+					slog.String("external_id", raw.ExternalID),
+					slog.String("titulo", raw.Title),
+					slog.String("cidade", raw.City),
+					slog.String("motivo", err.Error()),
+				)
+				continue
+			}
+
 			result.Failed++
 			result.Errors = append(result.Errors, err)
 			s.logger.WarnContext(ctx, "vaga rejeitada na normalizacao",

@@ -78,4 +78,8 @@ type Repository interface {
 	UpdateLastSeen(ctx context.Context, id uuid.UUID, lastSeenAt time.Time) error
 
 	ReconcileStatuses(ctx context.Context, unknownBefore, expiredBefore time.Time) (StatusReconciliationResult, error)
+
+	DeleteByIDs(ctx context.Context, ids []uuid.UUID) (int64, error)
+
+	ListActiveForPruning(ctx context.Context, limit, offset int32) ([]Job, error)
 }

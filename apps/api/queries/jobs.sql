@@ -310,4 +310,15 @@ WHERE (sqlc.narg('status')::text IS NULL OR status = sqlc.narg('status')::text)
 GROUP BY source
 ORDER BY source ASC;
 
+-- name: DeleteJobsByIDs :execrows
+DELETE FROM jobs
+WHERE id = ANY($1::uuid[]);
+
+-- name: ListActiveJobsForPruning :many
+SELECT id, title, description, city, state, company, source
+FROM jobs
+WHERE status = 'ACTIVE'
+ORDER BY id ASC
+LIMIT $1 OFFSET $2;
+
 
