@@ -15,8 +15,8 @@ test-unit: ## Executa apenas testes unitários com detecção de race conditions
 test-integration: ## Executa testes de integração reais contra o PostgreSQL
 	cd apps/api && go test -race -p 1 -v ./internal/database/... ./internal/collector/...
 
-test-e2e: ## Executa testes E2E reais contra portais externos (detecta quebra de layout)
-	cd apps/api && go test -v -tags=e2e ./internal/collector/... -run TestSantaCasaCollector_LiveE2E
+test-e2e: ## Executa testes E2E reais contra todos os portais externos monitorados
+	cd apps/api && go test -v -tags=e2e ./internal/collector/...
 
 test-cover: ## Executa testes e exibe relatório de cobertura
 	cd apps/api && go test -race -p 1 -coverprofile=coverage.out ./... && go tool cover -func=coverage.out
