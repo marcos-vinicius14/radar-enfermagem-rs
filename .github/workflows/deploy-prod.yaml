@@ -54,7 +54,7 @@ jobs:
             AUTH_HEADER="Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
           fi
 
-          HTTP_RESPONSE=$(curl -s -S -w "\n%{http_code}" -X POST "$DEPLOY_URL" \
+          HTTP_RESPONSE=$(curl -k -s -S -w "\n%{http_code}" -X POST "$DEPLOY_URL" \
             ${AUTH_HEADER:+-H "$AUTH_HEADER"} \
             -H "Content-Type: application/json" \
             -d "{\"tag\": \"${{ steps.version.outputs.tag }}\", \"sha\": \"${{ github.sha }}\", \"actor\": \"${{ github.actor }}\"}")
