@@ -199,6 +199,19 @@ func (q *Queries) CreateJob(ctx context.Context, arg CreateJobParams) (Job, erro
 	return i, err
 }
 
+const deleteJobsByIDs = `-- name: DeleteJobsByIDs :execrows
+DELETE FROM jobs
+WHERE id = ANY($1::uuid[])
+`
+
+func (q *Queries) DeleteJobsByIDs(ctx context.Context, dollar_1 []uuid.UUID) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteJobsByIDs, dollar_1)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const getJobByFingerprint = `-- name: GetJobByFingerprint :one
 SELECT
     id,
@@ -365,6 +378,57 @@ func (q *Queries) GetJobBySourceAndExternalID(ctx context.Context, arg GetJobByS
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const listActiveJobsForPruning = `-- name: ListActiveJobsForPruning :many
+SELECT id, title, description, city, state, company, source
+FROM jobs
+WHERE status = 'ACTIVE'
+ORDER BY id ASC
+LIMIT $1 OFFSET $2
+`
+
+type ListActiveJobsForPruningParams struct {
+	Limit  int32
+	Offset int32
+}
+
+type ListActiveJobsForPruningRow struct {
+	ID          uuid.UUID
+	Title       string
+	Description string
+	City        string
+	State       string
+	Company     string
+	Source      string
+}
+
+func (q *Queries) ListActiveJobsForPruning(ctx context.Context, arg ListActiveJobsForPruningParams) ([]ListActiveJobsForPruningRow, error) {
+	rows, err := q.db.Query(ctx, listActiveJobsForPruning, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListActiveJobsForPruningRow
+	for rows.Next() {
+		var i ListActiveJobsForPruningRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
+			&i.City,
+			&i.State,
+			&i.Company,
+			&i.Source,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listCities = `-- name: ListCities :many

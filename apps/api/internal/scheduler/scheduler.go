@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/collector"
+	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/job"
 	"github.com/robfig/cron/v3"
 )
 
@@ -21,11 +22,13 @@ var (
 
 // Config define os parâmetros de agendamento e execução periódica de coleta.
 type Config struct {
-	CronSchedule     string
-	Concurrency      int
-	UnknownThreshold time.Duration
-	ExpiredThreshold time.Duration
-	Query            collector.SearchQuery
+	CronSchedule       string
+	Concurrency        int
+	UnknownThreshold   time.Duration
+	ExpiredThreshold   time.Duration
+	Query              collector.SearchQuery
+	PrunerCronSchedule string
+	Pruner             *job.Pruner
 }
 
 // Scheduler gerencia a execução periódica e automática dos coletores de vagas.
@@ -33,6 +36,7 @@ type Scheduler struct {
 	cfg         Config
 	svc         *collector.Service
 	registry    *collector.Registry
+	pruner      *job.Pruner
 	tracker     *collector.MetricsTracker
 	logger      *slog.Logger
 	cron        *cron.Cron
@@ -72,6 +76,7 @@ func NewScheduler(cfg Config, svc *collector.Service, registry *collector.Regist
 		cfg:      cfg,
 		svc:      svc,
 		registry: registry,
+		pruner:   cfg.Pruner,
 		tracker:  collector.NewMetricsTracker(),
 		logger:   logger,
 		cron:     c,
@@ -88,6 +93,32 @@ func NewScheduler(cfg Config, svc *collector.Service, registry *collector.Regist
 	}))
 	s.entryID = entryID
 
+	if cfg.Pruner != nil {
+		prunerCron := cfg.PrunerCronSchedule
+		if prunerCron == "" {
+			prunerCron = "0 */12 * * *"
+		}
+		prunerSched, pErr := cronParser.Parse(prunerCron)
+		if pErr != nil {
+			return nil, fmt.Errorf("%w no pruner cron %q: %v", ErrInvalidCron, prunerCron, pErr)
+		}
+		c.Schedule(prunerSched, cron.FuncJob(func() {
+			ctx := context.Background()
+			res, err := s.pruner.Prune(ctx)
+			if err != nil {
+				s.logger.ErrorContext(ctx, "falha durante execucao agendada do pruner",
+					slog.String("erro", err.Error()),
+				)
+			} else {
+				s.logger.InfoContext(ctx, "execucao agendada do pruner concluida com sucesso",
+					slog.Int64("total_verificadas", res.TotalChecked),
+					slog.Int64("total_removidas", res.TotalPruned),
+					slog.Duration("duracao", res.Duration),
+				)
+			}
+		}))
+	}
+
 	return s, nil
 }
 
@@ -100,8 +131,26 @@ func (s *Scheduler) Start(ctx context.Context) error {
 		slog.Duration("expired_threshold", s.cfg.ExpiredThreshold),
 	)
 
+	if s.pruner != nil {
+		prunerCron := s.cfg.PrunerCronSchedule
+		if prunerCron == "" {
+			prunerCron = "0 */12 * * *"
+		}
+		s.logger.InfoContext(ctx, "iniciando scheduler de saneamento/expurgo de vagas fora de dominio",
+			slog.String("pruner_cron", prunerCron),
+		)
+	}
+
 	s.cron.Start()
 	return nil
+}
+
+// TriggerPruneNow executa o saneamento e expurgo de vagas imediatamente sob demanda.
+func (s *Scheduler) TriggerPruneNow(ctx context.Context) (job.PruneResult, error) {
+	if s.pruner == nil {
+		return job.PruneResult{}, errors.New("pruner não configurado no scheduler")
+	}
+	return s.pruner.Prune(ctx)
 }
 
 // Stop finaliza graciosamente o agendador aguardando a conclusão de tarefas em andamento.

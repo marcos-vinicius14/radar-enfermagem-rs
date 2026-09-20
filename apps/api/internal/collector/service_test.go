@@ -296,8 +296,8 @@ func TestCollectService_EndToEndWithSantaCasaFixture(t *testing.T) {
 	if resAll.TotalFound != 3 {
 		t.Errorf("TotalFound = %d, esperado 3", resAll.TotalFound)
 	}
-	if resAll.Inserted != 2 { // 2 novas (Enfermeiro e Advogado)
-		t.Errorf("esperava 2 novas inserções, obteve %d", resAll.Inserted)
+	if resAll.Inserted != 1 { // 1 nova inserida (Enfermeiro). O Advogado é descartado pelo filtro de enfermagem
+		t.Errorf("esperava 1 nova inserção, obteve %d", resAll.Inserted)
 	}
 	if resAll.Updated != 1 { // 1 atualizada (Técnico previamente inserida)
 		t.Errorf("esperava 1 atualização, obteve %d", resAll.Updated)

@@ -57,7 +57,7 @@ func TestSaoLucasCollector_Collect(t *testing.T) {
 		if first.Source != "saolucas" {
 			t.Errorf("Source = %q, esperado saolucas", first.Source)
 		}
-		expectedURL := "https://pucrs.gupy.io/jobs/12494550"
+		expectedURL := "https://hospitalsaolucas.gupy.io/jobs/12494550"
 		if first.SourceURL != expectedURL {
 			t.Errorf("SourceURL = %q, esperado %q", first.SourceURL, expectedURL)
 		}

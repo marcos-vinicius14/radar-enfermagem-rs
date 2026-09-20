@@ -1,6 +1,7 @@
 package collector
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -22,6 +23,29 @@ func (n *Normalizer) Normalize(raw RawJob) (job.Job, error) {
 	source := strings.ToLower(cleanSpaces(raw.Source))
 	sourceURL := strings.TrimSpace(raw.SourceURL)
 	description := strings.TrimSpace(raw.Description)
+
+	if title == "" {
+		return job.Job{}, errors.New("o título da vaga é obrigatório")
+	}
+	if company == "" {
+		return job.Job{}, errors.New("a instituição/empresa da vaga é obrigatória")
+	}
+	if source == "" {
+		return job.Job{}, errors.New("a fonte de coleta da vaga é obrigatória")
+	}
+	if sourceURL == "" {
+		return job.Job{}, errors.New("a URL de candidatura da vaga é obrigatória")
+	}
+
+	// 1. Validação de Domínio de Enfermagem
+	if !job.IsNursingJob(title, description) {
+		return job.Job{}, fmt.Errorf("%w: %q", job.ErrNotNursingJob, title)
+	}
+
+	// 2. Validação Territorial (Região Metropolitana de Porto Alegre / RS)
+	if !job.IsTargetLocation(city, state) {
+		return job.Job{}, fmt.Errorf("%w: %s/%s", job.ErrOutOfScopeLocation, city, state)
+	}
 
 	now := time.Now().UTC()
 
@@ -77,15 +101,7 @@ func normalizeState(state, city string) string {
 }
 
 func isMetropolitanRegionRS(city string) bool {
-	normalizedCity := job.NormalizeText(city)
-	switch normalizedCity {
-	case "porto alegre", "canoas", "novo hamburgo", "sao leopoldo", "gravatai",
-		"viamao", "alvorada", "cachoeirinha", "esteio", "sapucaia do sul",
-		"guaiba", "eldorado do sul", "campo bom", "sapiranga", "dois irmaos":
-		return true
-	default:
-		return false
-	}
+	return job.IsTargetLocation(city, "RS")
 }
 
 func normalizeWorkMode(raw string) job.WorkMode {
