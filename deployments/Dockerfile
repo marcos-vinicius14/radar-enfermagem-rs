@@ -7,7 +7,7 @@ WORKDIR /build
 RUN apk add --no-cache ca-certificates tzdata
 
 COPY apps/api/go.mod apps/api/go.sum ./apps/api/
-COPY apps/web/go.mod ./apps/web/
+COPY apps/web/go.mod apps/web/go.sum* ./apps/web/
 
 COPY apps/web/ ./apps/web/
 COPY apps/api/ ./apps/api/
