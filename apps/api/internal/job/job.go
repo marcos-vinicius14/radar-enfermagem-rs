@@ -40,26 +40,26 @@ const (
 )
 
 type Job struct {
-	ID             uuid.UUID
-	ExternalID     string
-	Title          string
-	Company        string
-	Description    string
-	City           string
-	State          string
-	Source         string
-	SourceURL      string
-	Fingerprint    string
-	WorkMode       WorkMode
-	EmploymentType EmploymentType
-	SalaryMin      *int64
-	SalaryMax      *int64
-	PublishedAt    *time.Time
-	CollectedAt    time.Time
-	LastSeenAt     time.Time
-	Status         Status
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	ID             uuid.UUID      `json:"id"`
+	ExternalID     string         `json:"external_id"`
+	Title          string         `json:"title"`
+	Company        string         `json:"company"`
+	Description    string         `json:"description"`
+	City           string         `json:"city"`
+	State          string         `json:"state"`
+	Source         string         `json:"source"`
+	SourceURL      string         `json:"source_url"`
+	Fingerprint    string         `json:"fingerprint,omitempty"`
+	WorkMode       WorkMode       `json:"work_mode"`
+	EmploymentType EmploymentType `json:"employment_type"`
+	SalaryMin      *int64         `json:"salary_min"`
+	SalaryMax      *int64         `json:"salary_max"`
+	PublishedAt    *time.Time     `json:"published_at"`
+	CollectedAt    time.Time      `json:"collected_at"`
+	LastSeenAt     time.Time      `json:"last_seen_at"`
+	Status         Status         `json:"status"`
+	CreatedAt      time.Time      `json:"created_at"`
+	UpdatedAt      time.Time      `json:"updated_at"`
 }
 
 func (j *Job) Validate() error {

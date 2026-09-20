@@ -10,10 +10,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/collector"
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/config"
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/database"
 	internalhttp "github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/http"
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/logger"
+	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/scheduler"
 )
 
 func main() {
@@ -42,7 +44,72 @@ func main() {
 		defer db.Close()
 	}
 
-	router := internalhttp.NewRouter(log, db)
+	var jobRepo *database.JobRepository
+	if db != nil {
+		jobRepo = database.NewJobRepository(db.Pool, log)
+	}
+
+	var sched *scheduler.Scheduler
+	if (cfg.EnableScheduler || cfg.CollectorRunOnStartup) && db != nil {
+		httpClient := collector.NewResilientHTTPClient(collector.ResilientClientConfig{
+			Timeout:           20 * time.Second,
+			MaxRetries:        3,
+			InitialRetryDelay: 200 * time.Millisecond,
+			DefaultRPS:        cfg.CollectorRateLimitRPS,
+			DefaultBurst:      cfg.CollectorRateLimitBurst,
+		}, log)
+
+		reg := collector.NewDefaultRegistry(httpClient, 20*time.Second)
+		svc := collector.NewService(jobRepo, nil, nil, log)
+
+		unknownThreshold := time.Duration(cfg.CollectorStatusUnknownHours) * time.Hour
+		expiredThreshold := time.Duration(cfg.CollectorStatusExpiredHours) * time.Hour
+
+		schedInstance, err := scheduler.NewScheduler(scheduler.Config{
+			CronSchedule:     cfg.CollectorCronSchedule,
+			Concurrency:      cfg.CollectorConcurrency,
+			UnknownThreshold: unknownThreshold,
+			ExpiredThreshold: expiredThreshold,
+		}, svc, reg, log)
+		if err != nil {
+			log.Error("failed to create collector scheduler", "error", err)
+		} else {
+			sched = schedInstance
+
+			if cfg.EnableScheduler {
+				if err := schedInstance.Start(context.Background()); err != nil {
+					log.Error("failed to start collector scheduler", "error", err)
+				} else {
+					log.Info("collector scheduler started in background",
+						"cron_schedule", cfg.CollectorCronSchedule,
+						"concurrency", cfg.CollectorConcurrency,
+					)
+				}
+			}
+
+			if cfg.CollectorRunOnStartup {
+				go func() {
+					log.Info("executando coleta inicial de vagas no startup...")
+					startupCtx, startupCancel := context.WithTimeout(context.Background(), 5*time.Minute)
+					defer startupCancel()
+
+					metrics, err := schedInstance.TriggerNow(startupCtx)
+					if err != nil {
+						log.Error("falha na coleta inicial de startup", "erro", err)
+					} else {
+						log.Info("coleta inicial de startup concluida com sucesso",
+							"total_encontradas", metrics.TotalFound,
+							"total_inseridas", metrics.TotalInserted,
+							"total_atualizadas", metrics.TotalUpdated,
+							"duracao", metrics.Duration.String(),
+						)
+					}
+				}()
+			}
+		}
+	}
+
+	router := internalhttp.NewRouter(log, db, jobRepo)
 
 	server := &http.Server{
 		Addr:              fmt.Sprintf(":%d", cfg.Port),
@@ -68,10 +135,17 @@ func main() {
 	select {
 	case err := <-serverErrors:
 		log.Error("server encountered fatal error", "error", err)
+		if sched != nil {
+			sched.Stop()
+		}
 		os.Exit(1)
 
 	case sig := <-shutdown:
 		log.Info("shutdown signal received, initiating graceful shutdown", "signal", sig.String())
+
+		if sched != nil {
+			sched.Stop()
+		}
 
 		// Contexto para graceful shutdown com timeout de 10 segundos
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -84,4 +158,5 @@ func main() {
 
 		log.Info("server shutdown completed cleanly")
 	}
+
 }

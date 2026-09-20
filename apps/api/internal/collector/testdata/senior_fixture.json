@@ -1,0 +1,81 @@
+{
+  "totalPages": 1,
+  "totalElements": 3,
+  "contents": [
+    {
+      "vacancy": {
+        "id": "d8610d98-373e-4fea-b2a3-956dee488e83",
+        "title": "Técnico de Enfermagem - Centro Cirúrgico - Hospital Mãe de Deus",
+        "jobModel": [
+          "IN_PERSON"
+        ],
+        "localization": {
+          "id": "9b44d05b-a76d-458d-a7c2-64fab163af64",
+          "city": "Porto Alegre",
+          "province": "RS",
+          "country": "Brasil"
+        },
+        "publication": {
+          "id": "1a00c0b9-ebbf-4134-8806-3f37b1e59dda",
+          "startDate": "2026-08-26",
+          "endDate": "2026-09-30"
+        }
+      },
+      "company": {
+        "id": "5ddfb2e5-3a03-4dd9-8d35-ae8d5538185b",
+        "name": "ASSOCIAÇÃO EDUCADORA SÃO CARLOS",
+        "tenant": "maededeuscombr"
+      }
+    },
+    {
+      "vacancy": {
+        "id": "3924eab6-5773-4f59-91b1-4d870df632ae",
+        "title": "Enfermeiro Rotineiro - UTI Adulto",
+        "jobModel": [
+          "IN_PERSON"
+        ],
+        "localization": {
+          "id": "4af93787-7543-4b09-8b6e-7775a5144769",
+          "city": "Porto Alegre",
+          "province": "RS",
+          "country": "Brasil"
+        },
+        "publication": {
+          "id": "37048a5a-17f1-41b6-9dff-1011af60625f",
+          "startDate": "2026-09-01",
+          "endDate": "2026-10-01"
+        }
+      },
+      "company": {
+        "id": "5ddfb2e5-3a03-4dd9-8d35-ae8d5538185b",
+        "name": "ASSOCIAÇÃO EDUCADORA SÃO CARLOS",
+        "tenant": "maededeuscombr"
+      }
+    },
+    {
+      "vacancy": {
+        "id": "67ded879-3aae-41a6-b92a-f61311548e29",
+        "title": "Analista de Tecnologia da Informação",
+        "jobModel": [
+          "HYBRID"
+        ],
+        "localization": {
+          "id": "63fdc39f-5fda-489a-b986-b7bc24a6d805",
+          "city": "Porto Alegre",
+          "province": "RS",
+          "country": "Brasil"
+        },
+        "publication": {
+          "id": "18ffc319-f513-49e5-b1b3-f2f33d48adfb",
+          "startDate": "2026-09-10",
+          "endDate": "2026-10-10"
+        }
+      },
+      "company": {
+        "id": "5ddfb2e5-3a03-4dd9-8d35-ae8d5538185b",
+        "name": "ASSOCIAÇÃO EDUCADORA SÃO CARLOS",
+        "tenant": "maededeuscombr"
+      }
+    }
+  ]
+}

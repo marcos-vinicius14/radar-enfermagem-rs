@@ -11,8 +11,8 @@ Este roadmap organiza o desenvolvimento do **Radar Enfermagem RS** em milestones
 | [Milestone 1](#milestone-1--fundação-do-projeto) | Fundação do Projeto (Monorepo, Go, Chi, Postgres 18, Migrations, Docker) | Concluída |
 | [Milestone 2](#milestone-2--domínio-e-persistência-de-vagas) | Domínio e Persistência de Vagas (`jobs`, UUIDv7, sqlc, Repository) | Concluída |
 | [Milestone 3](#milestone-3--pipeline-de-coleta) | Pipeline de Coleta (Contrato Collector, RawJob, Normalizer, Deduplicator) | Concluída |
-| [Milestone 4](#milestone-4--portais-oficiais) | Portais Oficiais (Santa Casa, Moinhos, São Lucas, Unimed, etc.) | A Fazer |
-| [Milestone 5](#milestone-5--scheduler-e-resiliência) | Scheduler e Resiliência (Cron, Errgroup, Rate Limiting, Retries) | A Fazer |
+| [Milestone 4](#milestone-4--portais-oficiais) | Portais Oficiais (Santa Casa, Moinhos, São Lucas, Unimed, etc.) | Concluída |
+| [Milestone 5](#milestone-5--scheduler-e-resiliência) | Scheduler e Resiliência (Cron, Errgroup, Rate Limiting, Retries) | Concluída |
 | [Milestone 6](#milestone-6--api-de-consulta) | API de Consulta (Endpoints REST paginados e filtráveis) | A Fazer |
 | [Milestone 7](#milestone-7--frontend-htmx) | Frontend HTMX (Layout clean, cards, listagem e filtros dinâmicos) | A Fazer |
 | [Milestone 8](#milestone-8--full-text-search) | Full Text Search (Busca textual nativa com PostgreSQL GIN) | A Fazer |
@@ -142,17 +142,17 @@ Este roadmap organiza o desenvolvimento do **Radar Enfermagem RS** em milestones
 
 > **Objetivo:** Adicionar todas as instituições inicialmente monitoradas. Cada collector deve respeitar o contrato, timeout, rate limit e testes de parsing.
 
-- [ ] **Task 20: Implementar collector da Santa Casa**
-- [ ] **Task 21: Implementar collector do Moinhos de Vento**
-- [ ] **Task 22: Implementar collector do Hospital São Lucas**
-- [ ] **Task 23: Implementar collector da Unimed**
-- [ ] **Task 24: Implementar collector da Doctor Clin**
-- [ ] **Task 25: Implementar collector do Fleury / Weinmann**
-- [ ] **Task 26: Implementar collector do HCPA**
-- [ ] **Task 27: Implementar collector da Divina Providência**
-- [ ] **Task 28: Implementar collector do Hospital Mãe de Deus**
-- [ ] **Task 29: Criar collectors reutilizáveis por provedor**
-  - [ ] Abstrair integrações compartilhadas (ex: Gupy, endpoints JSON padrão) evitando duplicação
+- [x] **Task 20: Implementar collector da Santa Casa**
+- [x] **Task 21: Implementar collector do Moinhos de Vento**
+- [x] **Task 22: Implementar collector do Hospital São Lucas**
+- [x] **Task 23: Implementar collector da Unimed**
+- [x] **Task 24: Implementar collector da Doctor Clin**
+- [x] **Task 25: Implementar collector do Fleury / Weinmann**
+- [x] **Task 26: Implementar collector do HCPA**
+- [x] **Task 27: Implementar collector da Divina Providência**
+- [x] **Task 28: Implementar collector do Hospital Mãe de Deus**
+- [x] **Task 29: Criar collectors reutilizáveis por provedor**
+  - [x] Abstrair integrações compartilhadas (Gupy, Senior Sistemas, Vagas.com) evitando duplicação
 
 ---
 
@@ -160,19 +160,19 @@ Este roadmap organiza o desenvolvimento do **Radar Enfermagem RS** em milestones
 
 > **Objetivo:** Automatizar a coleta e tornar o processo resiliente.
 
-- [ ] **Task 30: Configurar scheduler**
-  - [ ] Frequência inicial: a cada 2 horas (`robfig/cron`)
-- [ ] **Task 31: Executar collectors concorrentemente**
-  - [ ] Usar `golang.org/x/sync/errgroup` com limite de concorrência
-- [ ] **Task 32: Implementar rate limiting**
-  - [ ] Usar `golang.org/x/time/rate` com limites configuráveis por domínio
-- [ ] **Task 33: Implementar política de retry**
-  - [ ] Retry apenas para falhas transitórias (timeout, 5xx, falha temporária de rede)
-  - [ ] Não retentar erros definitivos de 4xx ou parsing inválido
-- [ ] **Task 34: Implementar controle de status das vagas**
-  - [ ] Ciclo de vida: `ACTIVE` → `UNKNOWN` → `EXPIRED`
-- [ ] **Task 35: Adicionar métricas básicas de coleta**
-  - [ ] Contadores: vagas encontradas, novas, atualizadas, ignoradas, erros por fonte e tempo de execução
+- [x] **Task 30: Configurar scheduler**
+  - [x] Frequência inicial: a cada 2 horas (`robfig/cron`)
+- [x] **Task 31: Executar collectors concorrentemente**
+  - [x] Usar `golang.org/x/sync/errgroup` com limite de concorrência
+- [x] **Task 32: Implementar rate limiting**
+  - [x] Usar `golang.org/x/time/rate` com limites configuráveis por domínio
+- [x] **Task 33: Implementar política de retry**
+  - [x] Retry apenas para falhas transitórias (timeout, 5xx, falha temporária de rede)
+  - [x] Não retentar erros definitivos de 4xx ou parsing inválido
+- [x] **Task 34: Implementar controle de status das vagas**
+  - [x] Ciclo de vida: `ACTIVE` → `UNKNOWN` → `EXPIRED`
+- [x] **Task 35: Adicionar métricas básicas de coleta**
+  - [x] Contadores: vagas encontradas, novas, atualizadas, ignoradas, erros por fonte e tempo de execução
 
 ---
 
@@ -180,16 +180,16 @@ Este roadmap organiza o desenvolvimento do **Radar Enfermagem RS** em milestones
 
 > **Objetivo:** Expor as vagas armazenadas de forma paginada e filtrável.
 
-- [ ] **Task 36: Implementar `GET /api/v1/jobs`**
-  - [ ] Filtros: `query`, `city`, `state`, `company`, `status`, `date`, `page`, `size`
-- [ ] **Task 37: Implementar `GET /api/v1/jobs/{id}`**
-- [ ] **Task 38: Implementar `GET /api/v1/companies`**
-- [ ] **Task 39: Implementar `GET /api/v1/cities`**
-- [ ] **Task 40: Implementar `GET /api/v1/sources`**
-- [ ] **Task 41: Implementar paginação**
-  - [ ] Limite máximo configurado
-  - [ ] Metadados de paginação (`items`, `page`, `size`, `total`)
-  - [ ] Ordenação determinística
+- [x] **Task 36: Implementar `GET /api/v1/jobs`**
+  - [x] Filtros: `query`, `city`, `state`, `company`, `status`, `date`, `page`, `size`
+- [x] **Task 37: Implementar `GET /api/v1/jobs/{id}`**
+- [x] **Task 38: Implementar `GET /api/v1/companies`**
+- [x] **Task 39: Implementar `GET /api/v1/cities`**
+- [x] **Task 40: Implementar `GET /api/v1/sources`**
+- [x] **Task 41: Implementar paginação**
+  - [x] Limite máximo configurado
+  - [x] Metadados de paginação (`items`, `page`, `size`, `total`)
+  - [x] Ordenação determinística
 
 ---
 
@@ -197,20 +197,20 @@ Este roadmap organiza o desenvolvimento do **Radar Enfermagem RS** em milestones
 
 > **Objetivo:** Criar uma interface clean, minimalista e focada na busca rápida de vagas.
 
-- [ ] **Task 42: Criar layout base**
-  - [ ] Header, conteúdo principal, footer e responsividade básica
-- [ ] **Task 43: Criar página inicial**
-  - [ ] Título do projeto, barra de pesquisa, filtros, lista de vagas e contador
-- [ ] **Task 44: Criar card de vaga**
-  - [ ] Exibir título, instituição, cidade, data de publicação, especialidade, fonte e link de candidatura
-- [ ] **Task 45: Implementar listagem com HTMX**
-  - [ ] Atualização dinâmica apenas do fragment da listagem
-- [ ] **Task 46: Implementar filtros com HTMX**
-  - [ ] Filtros por cidade, instituição, especialidade, status e período
-- [ ] **Task 47: Implementar paginação com HTMX**
-  - [ ] Navegação de páginas sem reload completo
-- [ ] **Task 48: Implementar estados de interface**
-  - [ ] Estados visuais: loading, vazio, erro, sem resultados e dados carregados
+- [x] **Task 42: Criar layout base**
+  - [x] Header, conteúdo principal, footer e responsividade básica
+- [x] **Task 43: Criar página inicial**
+  - [x] Título do projeto, barra de pesquisa, filtros, lista de vagas e contador
+- [x] **Task 44: Criar card de vaga**
+  - [x] Exibir título, instituição, cidade, data de publicação, especialidade, fonte e link de candidatura
+- [x] **Task 45: Implementar listagem com HTMX**
+  - [x] Atualização dinâmica apenas do fragment da listagem
+- [x] **Task 46: Implementar filtros com HTMX**
+  - [x] Filtros por cidade, instituição, especialidade, status e período
+- [x] **Task 47: Implementar paginação com HTMX**
+  - [x] Navegação de páginas sem reload completo
+- [x] **Task 48: Implementar estados de interface**
+  - [x] Estados visuais: loading, vazio, erro, sem resultados e dados carregados
 
 ---
 

@@ -2,6 +2,7 @@ package collector_test
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -55,6 +56,9 @@ func setupTestDB(t *testing.T) (*database.DB, *database.JobRepository) {
 		t.Skipf("PostgreSQL indisponível: %v", err)
 		return nil, nil
 	}
+
+	// Limpa o banco antes de iniciar o teste
+	_, _ = dbInstance.Pool.Exec(ctx, "TRUNCATE TABLE jobs CASCADE;")
 
 	t.Cleanup(func() {
 		cleanCtx, cleanCancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -297,5 +301,162 @@ func TestCollectService_EndToEndWithSantaCasaFixture(t *testing.T) {
 	}
 	if resAll.Updated != 1 { // 1 atualizada (Técnico previamente inserida)
 		t.Errorf("esperava 1 atualização, obteve %d", resAll.Updated)
+	}
+}
+
+func TestCollectService_CollectAll_Concorrente(t *testing.T) {
+	_, repo := setupTestDB(t)
+	ctx := context.Background()
+
+	svc := collector.NewService(repo, nil, nil, nil)
+
+	c1 := &mockCollector{
+		name: "portal-1",
+		jobs: []collector.RawJob{
+			{
+				ExternalID: "p1-001",
+				Title:      "Técnico em Enfermagem - UTI",
+				Company:    "Hospital 1",
+				City:       "Porto Alegre",
+				State:      "RS",
+				Source:     "portal-1",
+				SourceURL:  "https://portal1.com/vagas/1",
+			},
+		},
+	}
+
+	c2 := &mockCollector{
+		name: "portal-2",
+		jobs: []collector.RawJob{
+			{
+				ExternalID: "p2-001",
+				Title:      "Técnico em Enfermagem - Pediatria",
+				Company:    "Hospital 2",
+				City:       "Porto Alegre",
+				State:      "RS",
+				Source:     "portal-2",
+				SourceURL:  "https://portal2.com/vagas/1",
+			},
+		},
+	}
+
+	c3Falho := &mockCollector{
+		name: "portal-falho",
+		err:  errors.New("portal fora do ar (HTTP 503)"),
+	}
+
+	targets := []collector.Collector{c1, c2, c3Falho}
+
+	metrics, err := svc.CollectAll(ctx, targets, collector.SearchQuery{}, 2)
+	if err != nil {
+		t.Fatalf("CollectAll() erro inesperado: %v", err)
+	}
+
+	if metrics.TotalFound != 2 {
+		t.Errorf("TotalFound = %d, esperado 2", metrics.TotalFound)
+	}
+	if metrics.TotalInserted != 2 {
+		t.Errorf("TotalInserted = %d, esperado 2", metrics.TotalInserted)
+	}
+	// O erro do portal-falho deve estar registrado nas métricas sem cancelar os outros dois
+	if len(metrics.ErrorsBySource) != 1 {
+		t.Errorf("esperava 1 erro em ErrorsBySource, obteve: %v", metrics.ErrorsBySource)
+	}
+	if metrics.ErrorsBySource["portal-falho"] == "" {
+		t.Errorf("esperava mensagem de erro para portal-falho")
+	}
+}
+
+func TestCollectService_ReativaVagasExpiradas(t *testing.T) {
+	_, repo := setupTestDB(t)
+	ctx := context.Background()
+
+	svc := collector.NewService(repo, nil, nil, nil)
+
+	// 1. Cria uma vaga diretamente com status EXPIRED
+	j := job.Job{
+		ExternalID:  "reativa-001",
+		Title:       "Técnico em Enfermagem - CTI",
+		Company:     "Hospital Moinhos",
+		City:        "Porto Alegre",
+		State:       "RS",
+		Source:      "moinhos",
+		SourceURL:   "https://moinhos.com/vaga/1",
+		Fingerprint: job.Fingerprint("Hospital Moinhos", "Técnico em Enfermagem - CTI", "Porto Alegre"),
+		Status:      job.StatusExpired,
+		LastSeenAt:  time.Now().Add(-10 * 24 * time.Hour),
+	}
+	saved, err := repo.Insert(ctx, j)
+	if err != nil {
+		t.Fatalf("Insert() erro: %v", err)
+	}
+	if saved.Status != job.StatusExpired {
+		t.Fatalf("Status inicial = %s, esperado EXPIRED", saved.Status)
+	}
+
+	// 2. Coletor reencontra a mesma vaga
+	c := &mockCollector{
+		name: "moinhos",
+		jobs: []collector.RawJob{
+			{
+				ExternalID: "reativa-001",
+				Title:      "Técnico em Enfermagem - CTI",
+				Company:    "Hospital Moinhos",
+				City:       "Porto Alegre",
+				State:      "RS",
+				Source:     "moinhos",
+				SourceURL:  "https://moinhos.com/vaga/1",
+			},
+		},
+	}
+
+	res, err := svc.CollectFrom(ctx, c, collector.SearchQuery{})
+	if err != nil {
+		t.Fatalf("CollectFrom() erro: %v", err)
+	}
+	if res.Updated != 1 {
+		t.Errorf("Updated = %d, esperado 1", res.Updated)
+	}
+
+	// 3. Verifica se o status voltou para ACTIVE
+	updatedJob, err := repo.FindByID(ctx, saved.ID)
+	if err != nil {
+		t.Fatalf("FindByID() erro: %v", err)
+	}
+	if updatedJob.Status != job.StatusActive {
+		t.Errorf("Status reativado = %s, esperado ACTIVE", updatedJob.Status)
+	}
+}
+
+func TestCollectService_ReconcileJobStatuses(t *testing.T) {
+	_, repo := setupTestDB(t)
+	ctx := context.Background()
+
+	svc := collector.NewService(repo, nil, nil, nil)
+
+	// Insere vaga antiga
+	j := job.Job{
+		ExternalID:  "old-001",
+		Title:       "Técnico em Enfermagem",
+		Company:     "Hospital Santa Casa",
+		City:        "Porto Alegre",
+		State:       "RS",
+		Source:      "santacasa",
+		SourceURL:   "https://santacasa.com/1",
+		Fingerprint: job.Fingerprint("Hospital Santa Casa", "Técnico em Enfermagem", "Porto Alegre"),
+		Status:      job.StatusActive,
+		LastSeenAt:  time.Now().Add(-30 * time.Hour),
+	}
+	if _, err := repo.Insert(ctx, j); err != nil {
+		t.Fatalf("Insert() erro: %v", err)
+	}
+
+	res, err := svc.ReconcileJobStatuses(ctx, 24*time.Hour, 7*24*time.Hour)
+	if err != nil {
+		t.Fatalf("ReconcileJobStatuses() erro: %v", err)
+	}
+
+	if res.MarkedUnknown != 1 {
+		t.Errorf("MarkedUnknown = %d, esperado 1", res.MarkedUnknown)
 	}
 }

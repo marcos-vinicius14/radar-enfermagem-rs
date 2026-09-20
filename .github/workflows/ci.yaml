@@ -4,25 +4,28 @@ on:
   pull_request:
     branches:
       - main
+      - develop
     paths:
       - 'apps/api/**'
+      - 'apps/web/**'
       - 'deployments/**'
       - 'go.work'
       - 'go.work.sum'
       - 'Makefile'
       - '.golangci.yml'
-      - '.github/workflows/ci.yaml'
+      - '.github/workflows/**'
   push:
     branches:
       - main
     paths:
       - 'apps/api/**'
+      - 'apps/web/**'
       - 'deployments/**'
       - 'go.work'
       - 'go.work.sum'
       - 'Makefile'
       - '.golangci.yml'
-      - '.github/workflows/ci.yaml'
+      - '.github/workflows/**'
   workflow_dispatch:
 
 concurrency:
@@ -48,23 +51,35 @@ jobs:
         with:
           go-version-file: 'apps/api/go.mod'
           cache: true
-          cache-dependency-path: 'apps/api/go.sum'
+          cache-dependency-path: |
+            apps/api/go.sum
+            apps/web/go.sum
 
       - name: Verificar formatação (gofmt)
         run: |
-          unformatted=$(gofmt -s -l apps/api)
+          unformatted=$(gofmt -s -l apps/api apps/web)
           if [ -n "$unformatted" ]; then
             echo "::error::Arquivos fora do padrão gofmt:"
             echo "$unformatted"
             exit 1
           fi
 
-      - name: Executar go vet
+      - name: Executar go vet (apps/api)
         working-directory: apps/api
         run: go vet ./...
 
-      - name: Verificar integridade dos módulos (go mod tidy)
+      - name: Executar go vet (apps/web)
+        working-directory: apps/web
+        run: go vet ./...
+
+      - name: Verificar integridade dos módulos (apps/api go mod tidy)
         working-directory: apps/api
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
+
+      - name: Verificar integridade dos módulos (apps/web go mod tidy)
+        working-directory: apps/web
         run: |
           go mod tidy
           git diff --exit-code go.mod go.sum
@@ -97,11 +112,21 @@ jobs:
         with:
           go-version-file: 'apps/api/go.mod'
           cache: true
-          cache-dependency-path: 'apps/api/go.sum'
+          cache-dependency-path: |
+            apps/api/go.sum
+            apps/web/go.sum
 
-      - name: Executar testes unitários com detecção de concorrência (-race -short)
+      - name: Executar testes unitários apps/api (-race -short)
         working-directory: apps/api
         run: go test -race -short -v -coverprofile=coverage-unit.out ./...
+
+      - name: Executar testes unitários apps/web (-race)
+        working-directory: apps/web
+        run: go test -race -v ./...
+
+      - name: Executar testes E2E reais de extração (Live Smoke Tests)
+        working-directory: apps/api
+        run: go test -v -tags=e2e ./internal/collector/... -run TestSantaCasaCollector_LiveE2E
 
       - name: Relatório de cobertura dos testes unitários
         working-directory: apps/api
@@ -185,7 +210,7 @@ jobs:
 
       - name: Executar testes de integração reais contra o PostgreSQL 18 (-race)
         working-directory: apps/api
-        run: go test -race -v -coverprofile=coverage-integration.out ./internal/database/...
+        run: go test -race -v -p 1 -coverprofile=coverage-integration.out ./internal/database/... ./internal/collector/...
 
       - name: Relatório de cobertura dos testes de integração
         working-directory: apps/api

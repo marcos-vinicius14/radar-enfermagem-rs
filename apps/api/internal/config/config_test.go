@@ -14,6 +14,10 @@ func TestLoad_Defaults(t *testing.T) {
 		"APP_ENV", "PORT", "LOG_LEVEL",
 		"DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME",
 		"DB_SSLMODE", "DB_MAX_CONNS", "DB_MIN_CONNS", "DB_CONN_TIMEOUT",
+		"ENABLE_SCHEDULER", "COLLECTOR_CRON_SCHEDULE", "COLLECTOR_CONCURRENCY",
+		"COLLECTOR_RATE_LIMIT_RPS", "COLLECTOR_RATE_LIMIT_BURST",
+		"COLLECTOR_STATUS_UNKNOWN_HOURS", "COLLECTOR_STATUS_EXPIRED_HOURS",
+		"COLLECTOR_RUN_ON_STARTUP",
 	}
 	for _, env := range envVars {
 		_ = os.Unsetenv(env)
@@ -57,6 +61,30 @@ func TestLoad_Defaults(t *testing.T) {
 	if cfg.DBConnTimeout != 5*time.Second {
 		t.Errorf("expected DBConnTimeout 5s, got: %v", cfg.DBConnTimeout)
 	}
+	if cfg.EnableScheduler != false {
+		t.Errorf("expected EnableScheduler false, got: %v", cfg.EnableScheduler)
+	}
+	if cfg.CollectorCronSchedule != "0 */2 * * *" {
+		t.Errorf("expected CollectorCronSchedule '0 */2 * * *', got: %s", cfg.CollectorCronSchedule)
+	}
+	if cfg.CollectorConcurrency != 3 {
+		t.Errorf("expected CollectorConcurrency 3, got: %d", cfg.CollectorConcurrency)
+	}
+	if cfg.CollectorRateLimitRPS != 3.0 {
+		t.Errorf("expected CollectorRateLimitRPS 3.0, got: %v", cfg.CollectorRateLimitRPS)
+	}
+	if cfg.CollectorRateLimitBurst != 5 {
+		t.Errorf("expected CollectorRateLimitBurst 5, got: %d", cfg.CollectorRateLimitBurst)
+	}
+	if cfg.CollectorStatusUnknownHours != 24 {
+		t.Errorf("expected CollectorStatusUnknownHours 24, got: %d", cfg.CollectorStatusUnknownHours)
+	}
+	if cfg.CollectorStatusExpiredHours != 168 {
+		t.Errorf("expected CollectorStatusExpiredHours 168, got: %d", cfg.CollectorStatusExpiredHours)
+	}
+	if cfg.CollectorRunOnStartup != false {
+		t.Errorf("expected CollectorRunOnStartup false, got: %v", cfg.CollectorRunOnStartup)
+	}
 }
 
 func TestLoad_CustomEnv(t *testing.T) {
@@ -72,6 +100,14 @@ func TestLoad_CustomEnv(t *testing.T) {
 	t.Setenv("DB_MAX_CONNS", "20")
 	t.Setenv("DB_MIN_CONNS", "5")
 	t.Setenv("DB_CONN_TIMEOUT", "10s")
+	t.Setenv("ENABLE_SCHEDULER", "true")
+	t.Setenv("COLLECTOR_CRON_SCHEDULE", "0 */4 * * *")
+	t.Setenv("COLLECTOR_CONCURRENCY", "5")
+	t.Setenv("COLLECTOR_RATE_LIMIT_RPS", "5.5")
+	t.Setenv("COLLECTOR_RATE_LIMIT_BURST", "10")
+	t.Setenv("COLLECTOR_STATUS_UNKNOWN_HOURS", "48")
+	t.Setenv("COLLECTOR_STATUS_EXPIRED_HOURS", "336")
+	t.Setenv("COLLECTOR_RUN_ON_STARTUP", "true")
 
 	cfg, err := config.Load()
 	if err != nil {
@@ -114,6 +150,31 @@ func TestLoad_CustomEnv(t *testing.T) {
 	if cfg.DBConnTimeout != 10*time.Second {
 		t.Errorf("expected DBConnTimeout 10s, got: %v", cfg.DBConnTimeout)
 	}
+	if cfg.EnableScheduler != true {
+		t.Errorf("expected EnableScheduler true, got: %v", cfg.EnableScheduler)
+	}
+	if cfg.CollectorCronSchedule != "0 */4 * * *" {
+		t.Errorf("expected CollectorCronSchedule '0 */4 * * *', got: %s", cfg.CollectorCronSchedule)
+	}
+	if cfg.CollectorConcurrency != 5 {
+		t.Errorf("expected CollectorConcurrency 5, got: %d", cfg.CollectorConcurrency)
+	}
+	if cfg.CollectorRateLimitRPS != 5.5 {
+		t.Errorf("expected CollectorRateLimitRPS 5.5, got: %v", cfg.CollectorRateLimitRPS)
+	}
+	if cfg.CollectorRateLimitBurst != 10 {
+		t.Errorf("expected CollectorRateLimitBurst 10, got: %d", cfg.CollectorRateLimitBurst)
+	}
+	if cfg.CollectorStatusUnknownHours != 48 {
+		t.Errorf("expected CollectorStatusUnknownHours 48, got: %d", cfg.CollectorStatusUnknownHours)
+	}
+	if cfg.CollectorStatusExpiredHours != 336 {
+		t.Errorf("expected CollectorStatusExpiredHours 336, got: %d", cfg.CollectorStatusExpiredHours)
+	}
+	if cfg.CollectorRunOnStartup != true {
+		t.Errorf("expected CollectorRunOnStartup true, got: %v", cfg.CollectorRunOnStartup)
+	}
+
 }
 
 func TestLoad_EdgeCasesAndValidation(t *testing.T) {

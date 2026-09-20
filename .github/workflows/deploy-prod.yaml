@@ -1,0 +1,84 @@
+name: Deploy Produção (Coolify)
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag de versão para deploy manual (ex: v1.0.0)'
+        required: false
+        default: ''
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-to-coolify:
+    name: Disparar Deploy no Coolify
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Identificar Versão de Release
+        id: version
+        run: |
+          RAW_TAG="${{ github.event.release.tag_name || inputs.tag || github.ref_name }}"
+          echo "tag=${RAW_TAG}" >> "$GITHUB_OUTPUT"
+          echo "🚀 Versão identificada para deploy: ${RAW_TAG}"
+
+          # Validação SemVer defensiva (ex: v1.0.0, v1.0.0-rc.1)
+          if [[ ! "${RAW_TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+            echo "::warning::A tag '${RAW_TAG}' não segue estritamente o padrão SemVer (vX.Y.Z)."
+          fi
+
+      - name: Disparar Webhook no Coolify
+        run: |
+          echo "Enviando solicitação de deploy para a VPS Coolify..."
+
+          # Suporta Webhook direto ou API com token
+          if [ -n "${{ secrets.COOLIFY_WEBHOOK_URL }}" ]; then
+            DEPLOY_URL="${{ secrets.COOLIFY_WEBHOOK_URL }}"
+          elif [ -n "${{ secrets.COOLIFY_URL }}" ] && [ -n "${{ secrets.COOLIFY_APP_UUID }}" ]; then
+            DEPLOY_URL="${{ secrets.COOLIFY_URL }}/api/v1/deploy?uuid=${{ secrets.COOLIFY_APP_UUID }}"
+          else
+            echo "::error::Nenhum segredo de deploy configurado. Configure COOLIFY_WEBHOOK_URL (ou COOLIFY_URL + COOLIFY_APP_UUID) nos Secrets do repositório."
+            exit 1
+          fi
+
+          AUTH_HEADER=""
+          if [ -n "${{ secrets.COOLIFY_TOKEN }}" ]; then
+            AUTH_HEADER="Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
+          fi
+
+          HTTP_RESPONSE=$(curl -s -S -w "\n%{http_code}" -X POST "$DEPLOY_URL" \
+            ${AUTH_HEADER:+-H "$AUTH_HEADER"} \
+            -H "Content-Type: application/json" \
+            -d "{\"tag\": \"${{ steps.version.outputs.tag }}\", \"sha\": \"${{ github.sha }}\", \"actor\": \"${{ github.actor }}\"}")
+
+          HTTP_BODY=$(echo "$HTTP_RESPONSE" | sed '$d')
+          HTTP_STATUS=$(echo "$HTTP_RESPONSE" | tail -n 1)
+
+          echo "Status HTTP retornado pelo Coolify: $HTTP_STATUS"
+          echo "Resposta: $HTTP_BODY"
+
+          if [[ "$HTTP_STATUS" =~ ^20[0-2]$ ]]; then
+            echo "✅ Sinal de deploy aceito pelo Coolify com sucesso!"
+          else
+            echo "::error::Falha ao acionar deploy no Coolify. Código HTTP: $HTTP_STATUS - Resposta: $HTTP_BODY"
+            exit 1
+          fi
+
+      - name: Sumário do Deploy
+        if: always()
+        run: |
+          echo "### 🚀 Deploy em Produção (Coolify)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Versão:** \`${{ steps.version.outputs.tag }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Commit:** \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Autor:** @${{ github.actor }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Release:** [Visualizar no GitHub](${{ github.event.release.html_url || github.server_url }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Disparo no Coolify:** Concluído com sucesso" >> "$GITHUB_STEP_SUMMARY"

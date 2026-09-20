@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{block "title" .}}Radar Enfermagem RS — Vagas de Técnico em Enfermagem em Porto Alegre e Região{{end}}</title>
+  <meta name="description" content="Centralize e monitore vagas de Técnico em Enfermagem nos principais hospitais e clínicas de Porto Alegre e região metropolitana.">
+  <meta name="theme-color" content="#0D7A68">
+  
+  <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+  <link rel="stylesheet" href="/static/css/styles.css">
+  
+  <!-- HTMX Vendored Localmente -->
+  <script src="/static/js/htmx.min.js"></script>
+</head>
+<body>
+
+  <!-- Header & Identidade Visual do Radar -->
+  <header class="site-header">
+    <div class="header-container">
+      <a href="/" class="brand-wrapper" title="Radar Enfermagem RS - Início">
+        <img src="/static/img/favicon.svg" alt="Ícone Cruz e Pulso" class="brand-logo" width="36" height="36">
+        <div class="brand-title-group">
+          <span class="brand-name">Radar Enfermagem RS</span>
+          <span class="brand-tagline">Porto Alegre &amp; Região Metropolitana</span>
+        </div>
+      </a>
+      
+      <div class="header-actions">
+        <div class="badge-live" title="Atualização automática e contínua dos portais hospitalares">
+          <span class="pulse-dot"></span>
+          <span>Monitoramento Ativo</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo Injetado pelas Páginas -->
+  {{block "content" .}}{{end}}
+
+  <!-- Rodapé Semântico -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <p><strong>Radar Enfermagem RS</strong> — Plataforma comunitária gratuita para técnicos em enfermagem.</p>
+      <p class="footer-disclaimer">
+        Monitoramos continuamente os portais oficiais de carreira de instituições como Santa Casa de Porto Alegre, 
+        Hospital Moinhos de Vento, HCPA, São Lucas da PUCRS, Unimed, Hospital Mãe de Deus, Divina Providência, Doctor Clin e Fleury/Weinmann.
+        Todas as candidaturas ocorrem diretamente nas plataformas oficiais das instituições.
+      </p>
+      <p>&copy; 2026 Radar Enfermagem RS. Código aberto e sem fins lucrativos.</p>
+    </div>
+  </footer>
+
+</body>
+</html>
