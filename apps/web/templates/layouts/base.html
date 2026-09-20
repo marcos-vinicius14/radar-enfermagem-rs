@@ -21,7 +21,10 @@
       <a href="/" class="brand-wrapper" title="Radar Enfermagem RS - Início">
         <img src="/static/img/favicon.svg" alt="Ícone Cruz e Pulso" class="brand-logo" width="36" height="36">
         <div class="brand-title-group">
-          <span class="brand-name">Radar Enfermagem RS</span>
+          <div class="brand-title-row">
+            <span class="brand-name">Radar Enfermagem RS</span>
+            <span class="badge-beta" title="Plataforma em versão de testes públicos (Beta)">BETA</span>
+          </div>
           <span class="brand-tagline">Porto Alegre &amp; Região Metropolitana</span>
         </div>
       </a>
@@ -35,19 +38,64 @@
     </div>
   </header>
 
+  <!-- Banner Informativo de Versão Beta -->
+  <aside class="beta-banner" aria-label="Aviso de Versão Beta">
+    <div class="beta-banner-container">
+      <span class="beta-banner-icon" aria-hidden="true">🚀</span>
+      <p class="beta-banner-text">
+        <strong>Versão Beta:</strong> O Radar Enfermagem RS está em fase de lançamento e melhorias contínuas. 
+        Encontrou alguma inconsistência ou tem uma sugestão? 
+        <a href="https://github.com/marcos-vinicius14/radar-enfermagem-rs/issues" target="_blank" rel="noopener noreferrer">Relate no GitHub</a>.
+      </p>
+    </div>
+  </aside>
+
   <!-- Conteúdo Injetado pelas Páginas -->
   {{block "content" .}}{{end}}
 
   <!-- Rodapé Semântico -->
   <footer class="site-footer">
     <div class="footer-container">
-      <p><strong>Radar Enfermagem RS</strong> — Plataforma comunitária gratuita para técnicos em enfermagem.</p>
-      <p class="footer-disclaimer">
-        Monitoramos continuamente os portais oficiais de carreira de instituições como Santa Casa de Porto Alegre, 
-        Hospital Moinhos de Vento, HCPA, São Lucas da PUCRS, Unimed, Hospital Mãe de Deus, Divina Providência, Doctor Clin e Fleury/Weinmann.
-        Todas as candidaturas ocorrem diretamente nas plataformas oficiais das instituições.
-      </p>
-      <p>&copy; 2026 Radar Enfermagem RS. Código aberto e sem fins lucrativos.</p>
+      <div class="footer-grid">
+        <div class="footer-brand-col">
+          <div class="footer-brand-header">
+            <img src="/static/img/favicon.svg" alt="Ícone Cruz e Pulso" width="24" height="24">
+            <span class="footer-brand-title">Radar Enfermagem RS</span>
+          </div>
+          <p class="footer-mission">
+            Plataforma comunitária, cidadã e estritamente sem fins lucrativos para conectar técnicos de enfermagem e enfermeiros às vagas abertas nos hospitais de Porto Alegre e região metropolitana.
+          </p>
+          <p class="footer-license">
+            Código aberto sob licença <a href="https://github.com/marcos-vinicius14/radar-enfermagem-rs/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">GNU AGPLv3</a>. Livre, transparente e gratuito.
+          </p>
+        </div>
+
+        <div class="footer-links-col">
+          <h4 class="footer-col-title">Comunidade &amp; Suporte</h4>
+          <ul class="footer-links-list">
+            <li><a href="https://github.com/marcos-vinicius14/radar-enfermagem-rs" target="_blank" rel="noopener noreferrer">Repositório no GitHub</a></li>
+            <li><a href="https://github.com/marcos-vinicius14/radar-enfermagem-rs/issues" target="_blank" rel="noopener noreferrer">Reportar Bug ou Sugestão</a></li>
+            <li><a href="https://github.com/marcos-vinicius14/radar-enfermagem-rs/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">Guia de Contribuição</a></li>
+            <li><a href="mailto:contato@radarenfermagem.app.br">Contato Institucional</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-disclaimer-card">
+        <h5 class="disclaimer-title">Aviso Legal &amp; Isenção de Responsabilidade</h5>
+        <p class="disclaimer-text">
+          O Radar Enfermagem RS é uma iniciativa voluntária independente e não possui vínculo com as instituições citadas. 
+          Todas as marcas, logos e nomes de hospitais pertencem exclusivamente aos seus respectivos titulares e são utilizados unicamente para identificar a origem das oportunidades públicas. 
+          Todas as candidaturas ocorrem diretamente nas plataformas oficiais dos hospitais.
+        </p>
+        <p class="disclaimer-removal">
+          <strong>Aviso a recrutadores:</strong> Para solicitar remoção ou atualização das vagas de sua organização, entre em contato via <a href="mailto:contato@radarenfermagem.app.br">contato@radarenfermagem.app.br</a> ou abra uma <a href="https://github.com/marcos-vinicius14/radar-enfermagem-rs/issues" target="_blank" rel="noopener noreferrer">issue no GitHub</a> que atenderemos prontamente.
+        </p>
+      </div>
+
+      <div class="footer-bottom-bar">
+        <p>&copy; 2026 Radar Enfermagem RS. Feito com dedicação para quem cuida da saúde da nossa comunidade.</p>
+      </div>
     </div>
   </footer>
 
