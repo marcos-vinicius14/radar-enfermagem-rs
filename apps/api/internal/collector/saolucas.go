@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	defaultSaoLucasURL = "https://pucrs.gupy.io"
+	defaultSaoLucasURL = "https://hospitalsaolucas.gupy.io"
 )
 
 var _ Collector = (*SaoLucasCollector)(nil)

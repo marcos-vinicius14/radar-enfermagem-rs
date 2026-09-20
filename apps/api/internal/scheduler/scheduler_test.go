@@ -57,6 +57,12 @@ func (m *mockRepo) ReconcileStatuses(ctx context.Context, unknownBefore, expired
 	m.reconcileCnt++
 	return job.StatusReconciliationResult{MarkedUnknown: 2, MarkedExpired: 1}, nil
 }
+func (m *mockRepo) DeleteByIDs(ctx context.Context, ids []uuid.UUID) (int64, error) {
+	return int64(len(ids)), nil
+}
+func (m *mockRepo) ListActiveForPruning(ctx context.Context, limit, offset int32) ([]job.Job, error) {
+	return nil, nil
+}
 
 type mockCollector struct {
 	name  string
@@ -201,4 +207,29 @@ func TestScheduler_StartAndStop(t *testing.T) {
 	time.Sleep(50 * time.Millisecond)
 
 	sched.Stop()
+}
+
+func TestScheduler_WithPruner(t *testing.T) {
+	repo := &mockRepo{}
+	svc := collector.NewService(repo, nil, nil, nil)
+	reg := collector.NewRegistry()
+	pruner := job.NewPruner(repo, nil)
+
+	sched, err := scheduler.NewScheduler(scheduler.Config{
+		CronSchedule:       "@every 1h",
+		PrunerCronSchedule: "@every 1h",
+		Pruner:             pruner,
+	}, svc, reg, nil)
+	if err != nil {
+		t.Fatalf("NewScheduler() erro: %v", err)
+	}
+
+	ctx := context.Background()
+	res, err := sched.TriggerPruneNow(ctx)
+	if err != nil {
+		t.Fatalf("TriggerPruneNow() erro: %v", err)
+	}
+	if res.TotalChecked != 0 {
+		t.Errorf("TotalChecked esperado 0, obteve %d", res.TotalChecked)
+	}
 }

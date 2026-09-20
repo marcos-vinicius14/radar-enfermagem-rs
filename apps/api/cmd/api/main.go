@@ -14,6 +14,7 @@ import (
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/config"
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/database"
 	internalhttp "github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/http"
+	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/job"
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/logger"
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/scheduler"
 )
@@ -65,11 +66,15 @@ func main() {
 		unknownThreshold := time.Duration(cfg.CollectorStatusUnknownHours) * time.Hour
 		expiredThreshold := time.Duration(cfg.CollectorStatusExpiredHours) * time.Hour
 
+		prunerInstance := job.NewPruner(jobRepo, log)
+
 		schedInstance, err := scheduler.NewScheduler(scheduler.Config{
-			CronSchedule:     cfg.CollectorCronSchedule,
-			Concurrency:      cfg.CollectorConcurrency,
-			UnknownThreshold: unknownThreshold,
-			ExpiredThreshold: expiredThreshold,
+			CronSchedule:       cfg.CollectorCronSchedule,
+			Concurrency:        cfg.CollectorConcurrency,
+			UnknownThreshold:   unknownThreshold,
+			ExpiredThreshold:   expiredThreshold,
+			PrunerCronSchedule: cfg.PrunerCronSchedule,
+			Pruner:             prunerInstance,
 		}, svc, reg, log)
 		if err != nil {
 			log.Error("failed to create collector scheduler", "error", err)
@@ -83,8 +88,29 @@ func main() {
 					log.Info("collector scheduler started in background",
 						"cron_schedule", cfg.CollectorCronSchedule,
 						"concurrency", cfg.CollectorConcurrency,
+						"pruner_schedule", cfg.PrunerCronSchedule,
 					)
 				}
+			}
+
+			// Expurgo e saneamento imediato de vagas fora de domínio no deploy/startup
+			if cfg.PrunerRunOnStartup {
+				go func() {
+					log.Info("executando saneamento e expurgo de vagas fora do domínio no startup...")
+					pruneCtx, pruneCancel := context.WithTimeout(context.Background(), 2*time.Minute)
+					defer pruneCancel()
+
+					res, err := prunerInstance.Prune(pruneCtx)
+					if err != nil {
+						log.Error("falha no expurgo de vagas no startup", "erro", err)
+					} else {
+						log.Info("expurgo de vagas no startup concluido com sucesso",
+							"total_verificadas", res.TotalChecked,
+							"total_removidas", res.TotalPruned,
+							"duracao", res.Duration.String(),
+						)
+					}
+				}()
 			}
 
 			if cfg.CollectorRunOnStartup {

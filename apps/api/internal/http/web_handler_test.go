@@ -73,6 +73,12 @@ func (m *mockWebJobRepo) UpdateLastSeen(ctx context.Context, id uuid.UUID, t tim
 func (m *mockWebJobRepo) ReconcileStatuses(ctx context.Context, u, e time.Time) (job.StatusReconciliationResult, error) {
 	return job.StatusReconciliationResult{}, nil
 }
+func (m *mockWebJobRepo) DeleteByIDs(ctx context.Context, ids []uuid.UUID) (int64, error) {
+	return int64(len(ids)), nil
+}
+func (m *mockWebJobRepo) ListActiveForPruning(ctx context.Context, limit, offset int32) ([]job.Job, error) {
+	return nil, nil
+}
 
 func createSampleJob() job.Job {
 	pub := time.Now().Add(-3 * time.Hour)

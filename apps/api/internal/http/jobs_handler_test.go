@@ -85,6 +85,14 @@ func (m *mockJobRepository) ReconcileStatuses(ctx context.Context, unknownBefore
 	return job.StatusReconciliationResult{}, nil
 }
 
+func (m *mockJobRepository) DeleteByIDs(ctx context.Context, ids []uuid.UUID) (int64, error) {
+	return int64(len(ids)), nil
+}
+
+func (m *mockJobRepository) ListActiveForPruning(ctx context.Context, limit, offset int32) ([]job.Job, error) {
+	return nil, nil
+}
+
 func sampleJob() job.Job {
 	id := uuid.MustParse("01923b7e-8c34-7123-9000-123456789abc")
 	now := time.Now().UTC()
