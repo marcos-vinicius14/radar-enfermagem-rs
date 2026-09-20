@@ -524,3 +524,302 @@ func TestJobRepository_ReconcileStatuses(t *testing.T) {
 		t.Errorf("status de saved3 = %s, esperado %s", check3.Status, job.StatusActive)
 	}
 }
+
+func TestJobRepository_Search(t *testing.T) {
+	_, repo := setupIntegrationTest(t)
+	ctx := context.Background()
+
+	now := time.Now().UTC().Truncate(time.Microsecond)
+	t1 := now.Add(-10 * time.Hour)
+	t2 := now.Add(-24 * time.Hour)
+	t3 := now.Add(-72 * time.Hour)
+	t4 := now.Add(-120 * time.Hour)
+
+	jobsToInsert := []job.Job{
+		{
+			ExternalID:     "search-001",
+			Title:          "Técnico de Enfermagem - CTI Adulto",
+			Company:        "Hospital Moinhos de Vento",
+			Description:    "Plantão 12x36 diurno em terapia intensiva",
+			City:           "Porto Alegre",
+			State:          "RS",
+			Source:         "moinhos",
+			SourceURL:      "https://moinhos.com/jobs/001",
+			Fingerprint:    "fp-search-001",
+			WorkMode:       job.WorkModeOnSite,
+			EmploymentType: job.EmploymentTypeFullTime,
+			PublishedAt:    &t1,
+			Status:         job.StatusActive,
+		},
+		{
+			ExternalID:     "search-002",
+			Title:          "Técnico de Enfermagem - Pediatria",
+			Company:        "Hospital Santa Casa",
+			Description:    "Atendimento infantil e berçário",
+			City:           "Porto Alegre",
+			State:          "RS",
+			Source:         "santacasa",
+			SourceURL:      "https://santacasa.com/jobs/002",
+			Fingerprint:    "fp-search-002",
+			WorkMode:       job.WorkModeOnSite,
+			EmploymentType: job.EmploymentTypeFullTime,
+			PublishedAt:    &t2,
+			Status:         job.StatusActive,
+		},
+		{
+			ExternalID:     "search-003",
+			Title:          "Enfermeiro Auditor Clínico",
+			Company:        "Unimed Porto Alegre",
+			Description:    "Auditoria técnica hospitalar",
+			City:           "Canoas",
+			State:          "RS",
+			Source:         "unimed",
+			SourceURL:      "https://unimed.com/jobs/003",
+			Fingerprint:    "fp-search-003",
+			WorkMode:       job.WorkModeHybrid,
+			EmploymentType: job.EmploymentTypeFullTime,
+			PublishedAt:    &t3,
+			Status:         job.StatusActive,
+		},
+		{
+			ExternalID:     "search-004",
+			Title:          "Técnico em Enfermagem - Bloco Cirúrgico",
+			Company:        "Hospital Divina Providência",
+			Description:    "Instrumentação cirúrgica e recuperação pós-anestésica",
+			City:           "Porto Alegre",
+			State:          "RS",
+			Source:         "divina",
+			SourceURL:      "https://divina.com/jobs/004",
+			Fingerprint:    "fp-search-004",
+			WorkMode:       job.WorkModeOnSite,
+			EmploymentType: job.EmploymentTypeFullTime,
+			PublishedAt:    &t4,
+			Status:         job.StatusUnknown,
+		},
+	}
+
+	for _, j := range jobsToInsert {
+		if _, err := repo.Insert(ctx, j); err != nil {
+			t.Fatalf("falha ao inserir vaga de teste: %v", err)
+		}
+	}
+
+	t.Run("busca textual por query em titulo e descricao", func(t *testing.T) {
+		res, err := repo.Search(ctx, job.FilterParams{
+			Query: "Pediatria",
+			Page:  1,
+			Size:  10,
+		})
+		if err != nil {
+			t.Fatalf("Search() erro: %v", err)
+		}
+		if res.Total != 1 {
+			t.Errorf("Total = %d, esperado 1", res.Total)
+		}
+		if len(res.Items) != 1 || res.Items[0].ExternalID != "search-002" {
+			t.Errorf("vaga inesperada retornada: %+v", res.Items)
+		}
+	})
+
+	t.Run("filtro por cidade e empresa", func(t *testing.T) {
+		res, err := repo.Search(ctx, job.FilterParams{
+			City:    "Canoas",
+			Company: "Unimed",
+			Page:    1,
+			Size:    10,
+		})
+		if err != nil {
+			t.Fatalf("Search() erro: %v", err)
+		}
+		if res.Total != 1 {
+			t.Errorf("Total = %d, esperado 1", res.Total)
+		}
+		if len(res.Items) != 1 || res.Items[0].Company != "Unimed Porto Alegre" {
+			t.Errorf("vaga inesperada: %+v", res.Items)
+		}
+	})
+
+	t.Run("filtro por status explicito UNKNOWN", func(t *testing.T) {
+		res, err := repo.Search(ctx, job.FilterParams{
+			Status: "UNKNOWN",
+			Page:   1,
+			Size:   10,
+		})
+		if err != nil {
+			t.Fatalf("Search() erro: %v", err)
+		}
+		if res.Total != 1 {
+			t.Errorf("Total = %d, esperado 1", res.Total)
+		}
+		if len(res.Items) != 1 || res.Items[0].ExternalID != "search-004" {
+			t.Errorf("esperado search-004, obteve: %+v", res.Items)
+		}
+	})
+
+	t.Run("filtro por data de publicacao published_since", func(t *testing.T) {
+		since := now.Add(-30 * time.Hour) // deve incluir search-001 (10h) e search-002 (24h)
+		res, err := repo.Search(ctx, job.FilterParams{
+			PublishedSince: &since,
+			Page:           1,
+			Size:           10,
+		})
+		if err != nil {
+			t.Fatalf("Search() erro: %v", err)
+		}
+		if res.Total != 2 {
+			t.Errorf("Total = %d, esperado 2", res.Total)
+		}
+	})
+
+	t.Run("paginacao e ordenacao deterministica", func(t *testing.T) {
+		// Sem filtros específicos, deve retornar todas ordenadas por published_at DESC
+		page1, err := repo.Search(ctx, job.FilterParams{
+			Page: 1,
+			Size: 2,
+		})
+		if err != nil {
+			t.Fatalf("Search() page 1 erro: %v", err)
+		}
+		if page1.Total != 4 {
+			t.Errorf("Total = %d, esperado 4", page1.Total)
+		}
+		if page1.TotalPages != 2 {
+			t.Errorf("TotalPages = %d, esperado 2", page1.TotalPages)
+		}
+		if len(page1.Items) != 2 {
+			t.Fatalf("esperado 2 itens na page 1, obteve %d", len(page1.Items))
+		}
+		if page1.Items[0].ExternalID != "search-001" || page1.Items[1].ExternalID != "search-002" {
+			t.Errorf("ordenação inesperada na page 1: [%s, %s]", page1.Items[0].ExternalID, page1.Items[1].ExternalID)
+		}
+
+		page2, err := repo.Search(ctx, job.FilterParams{
+			Page: 2,
+			Size: 2,
+		})
+		if err != nil {
+			t.Fatalf("Search() page 2 erro: %v", err)
+		}
+		if len(page2.Items) != 2 {
+			t.Fatalf("esperado 2 itens na page 2, obteve %d", len(page2.Items))
+		}
+		if page2.Items[0].ExternalID != "search-003" || page2.Items[1].ExternalID != "search-004" {
+			t.Errorf("ordenação inesperada na page 2: [%s, %s]", page2.Items[0].ExternalID, page2.Items[1].ExternalID)
+		}
+	})
+}
+
+func TestJobRepository_Aggregations(t *testing.T) {
+	_, repo := setupIntegrationTest(t)
+	ctx := context.Background()
+
+	jobs := []job.Job{
+		{
+			ExternalID:     "agg-01",
+			Title:          "Vaga 1",
+			Company:        "Hospital Santa Casa",
+			City:           "Porto Alegre",
+			State:          "RS",
+			Source:         "santacasa",
+			SourceURL:      "https://sc.com/1",
+			Fingerprint:    "fp-agg-01",
+			WorkMode:       job.WorkModeOnSite,
+			EmploymentType: job.EmploymentTypeFullTime,
+			Status:         job.StatusActive,
+		},
+		{
+			ExternalID:     "agg-02",
+			Title:          "Vaga 2",
+			Company:        "Hospital Santa Casa",
+			City:           "Porto Alegre",
+			State:          "RS",
+			Source:         "santacasa",
+			SourceURL:      "https://sc.com/2",
+			Fingerprint:    "fp-agg-02",
+			WorkMode:       job.WorkModeOnSite,
+			EmploymentType: job.EmploymentTypeFullTime,
+			Status:         job.StatusActive,
+		},
+		{
+			ExternalID:     "agg-03",
+			Title:          "Vaga 3",
+			Company:        "Hospital Moinhos de Vento",
+			City:           "Canoas",
+			State:          "RS",
+			Source:         "moinhos",
+			SourceURL:      "https://hmv.com/3",
+			Fingerprint:    "fp-agg-03",
+			WorkMode:       job.WorkModeOnSite,
+			EmploymentType: job.EmploymentTypeFullTime,
+			Status:         job.StatusActive,
+		},
+		{
+			ExternalID:     "agg-04",
+			Title:          "Vaga 4",
+			Company:        "Hospital Moinhos de Vento",
+			City:           "Canoas",
+			State:          "RS",
+			Source:         "moinhos",
+			SourceURL:      "https://hmv.com/4",
+			Fingerprint:    "fp-agg-04",
+			WorkMode:       job.WorkModeOnSite,
+			EmploymentType: job.EmploymentTypeFullTime,
+			Status:         job.StatusExpired, // Não-ativa
+		},
+	}
+
+	for _, j := range jobs {
+		if _, err := repo.Insert(ctx, j); err != nil {
+			t.Fatalf("falha ao inserir vaga para agregação: %v", err)
+		}
+	}
+
+	t.Run("ListCompanies com status ACTIVE", func(t *testing.T) {
+		companies, err := repo.ListCompanies(ctx, "ACTIVE")
+		if err != nil {
+			t.Fatalf("ListCompanies erro: %v", err)
+		}
+		if len(companies) != 2 {
+			t.Fatalf("esperado 2 empresas ativas, obteve %d", len(companies))
+		}
+		// Ordenação alfabética: Hospital Moinhos de Vento (1 ativa), Hospital Santa Casa (2 ativas)
+		if companies[0].Name != "Hospital Moinhos de Vento" || companies[0].TotalJobs != 1 {
+			t.Errorf("empresa 0 inesperada: %+v", companies[0])
+		}
+		if companies[1].Name != "Hospital Santa Casa" || companies[1].TotalJobs != 2 {
+			t.Errorf("empresa 1 inesperada: %+v", companies[1])
+		}
+	})
+
+	t.Run("ListCities com status ACTIVE", func(t *testing.T) {
+		cities, err := repo.ListCities(ctx, "ACTIVE")
+		if err != nil {
+			t.Fatalf("ListCities erro: %v", err)
+		}
+		if len(cities) != 2 {
+			t.Fatalf("esperado 2 cidades ativas, obteve %d", len(cities))
+		}
+		if cities[0].City != "Canoas" || cities[0].TotalJobs != 1 {
+			t.Errorf("cidade 0 inesperada: %+v", cities[0])
+		}
+		if cities[1].City != "Porto Alegre" || cities[1].TotalJobs != 2 {
+			t.Errorf("cidade 1 inesperada: %+v", cities[1])
+		}
+	})
+
+	t.Run("ListSources com todas as vagas", func(t *testing.T) {
+		sources, err := repo.ListSources(ctx, "")
+		if err != nil {
+			t.Fatalf("ListSources erro: %v", err)
+		}
+		if len(sources) != 2 {
+			t.Fatalf("esperado 2 fontes, obteve %d", len(sources))
+		}
+		if sources[0].Source != "moinhos" || sources[0].TotalJobs != 2 {
+			t.Errorf("fonte 0 inesperada: %+v", sources[0])
+		}
+		if sources[1].Source != "santacasa" || sources[1].TotalJobs != 2 {
+			t.Errorf("fonte 1 inesperada: %+v", sources[1])
+		}
+	})
+}

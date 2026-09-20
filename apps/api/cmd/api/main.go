@@ -44,6 +44,11 @@ func main() {
 		defer db.Close()
 	}
 
+	var jobRepo *database.JobRepository
+	if db != nil {
+		jobRepo = database.NewJobRepository(db.Pool, log)
+	}
+
 	var sched *scheduler.Scheduler
 	if cfg.EnableScheduler && db != nil {
 		httpClient := collector.NewResilientHTTPClient(collector.ResilientClientConfig{
@@ -55,8 +60,7 @@ func main() {
 		}, log)
 
 		reg := collector.NewDefaultRegistry(httpClient, 20*time.Second)
-		repo := database.NewJobRepository(db.Pool, log)
-		svc := collector.NewService(repo, nil, nil, log)
+		svc := collector.NewService(jobRepo, nil, nil, log)
 
 		unknownThreshold := time.Duration(cfg.CollectorStatusUnknownHours) * time.Hour
 		expiredThreshold := time.Duration(cfg.CollectorStatusExpiredHours) * time.Hour
@@ -82,7 +86,7 @@ func main() {
 		}
 	}
 
-	router := internalhttp.NewRouter(log, db)
+	router := internalhttp.NewRouter(log, db, jobRepo)
 
 	server := &http.Server{
 		Addr:              fmt.Sprintf(":%d", cfg.Port),

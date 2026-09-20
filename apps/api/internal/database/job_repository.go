@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"math"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -208,6 +210,156 @@ func (r *JobRepository) List(ctx context.Context, params job.ListParams) ([]job.
 	return jobs, nil
 }
 
+func (r *JobRepository) Search(ctx context.Context, params job.FilterParams) (job.PaginatedJobs, error) {
+	page := params.Page
+	if page < 1 {
+		page = 1
+	}
+
+	size := params.Size
+	if size <= 0 {
+		size = 20
+	} else if size > 100 {
+		size = 100
+	}
+
+	offset := int32((page - 1) * size)
+	limit := int32(size)
+
+	countParams := db.CountSearchJobsParams{
+		Query:          toNullableText(params.Query),
+		City:           toNullableText(params.City),
+		State:          toNullableText(params.State),
+		Company:        toNullableText(params.Company),
+		Source:         toNullableText(params.Source),
+		Status:         toNullableText(params.Status),
+		PublishedSince: toNullableTimestamptz(params.PublishedSince),
+		PublishedUntil: toNullableTimestamptz(params.PublishedUntil),
+	}
+
+	total, err := r.queries.CountSearchJobs(ctx, countParams)
+	if err != nil {
+		r.logger.ErrorContext(ctx, "falha ao contar vagas na busca",
+			slog.String("query", params.Query),
+			slog.String("erro", err.Error()),
+		)
+		return job.PaginatedJobs{}, fmt.Errorf("contar vagas na busca: %w", err)
+	}
+
+	totalPages := 0
+	if total > 0 {
+		totalPages = int(math.Ceil(float64(total) / float64(size)))
+	}
+
+	if total == 0 || int64(offset) >= total {
+		return job.PaginatedJobs{
+			Items:      []job.Job{},
+			Page:       page,
+			Size:       size,
+			Total:      total,
+			TotalPages: totalPages,
+		}, nil
+	}
+
+	searchParams := db.SearchJobsParams{
+		Query:          toNullableText(params.Query),
+		City:           toNullableText(params.City),
+		State:          toNullableText(params.State),
+		Company:        toNullableText(params.Company),
+		Source:         toNullableText(params.Source),
+		Status:         toNullableText(params.Status),
+		PublishedSince: toNullableTimestamptz(params.PublishedSince),
+		PublishedUntil: toNullableTimestamptz(params.PublishedUntil),
+		OffsetCount:    offset,
+		LimitCount:     limit,
+	}
+
+	rows, err := r.queries.SearchJobs(ctx, searchParams)
+	if err != nil {
+		r.logger.ErrorContext(ctx, "falha ao buscar vagas",
+			slog.String("query", params.Query),
+			slog.Int("page", page),
+			slog.Int("size", size),
+			slog.String("erro", err.Error()),
+		)
+		return job.PaginatedJobs{}, fmt.Errorf("buscar vagas: %w", err)
+	}
+
+	jobs := make([]job.Job, 0, len(rows))
+	for _, row := range rows {
+		jobs = append(jobs, toDomainJob(row))
+	}
+
+	return job.PaginatedJobs{
+		Items:      jobs,
+		Page:       page,
+		Size:       size,
+		Total:      total,
+		TotalPages: totalPages,
+	}, nil
+}
+
+func (r *JobRepository) ListCompanies(ctx context.Context, status string) ([]job.CompanyStat, error) {
+	rows, err := r.queries.ListCompanies(ctx, toNullableText(status))
+	if err != nil {
+		r.logger.ErrorContext(ctx, "falha ao listar empresas",
+			slog.String("status", status),
+			slog.String("erro", err.Error()),
+		)
+		return nil, fmt.Errorf("listar empresas: %w", err)
+	}
+
+	stats := make([]job.CompanyStat, 0, len(rows))
+	for _, row := range rows {
+		stats = append(stats, job.CompanyStat{
+			Name:      row.Name,
+			TotalJobs: row.TotalJobs,
+		})
+	}
+	return stats, nil
+}
+
+func (r *JobRepository) ListCities(ctx context.Context, status string) ([]job.CityStat, error) {
+	rows, err := r.queries.ListCities(ctx, toNullableText(status))
+	if err != nil {
+		r.logger.ErrorContext(ctx, "falha ao listar cidades",
+			slog.String("status", status),
+			slog.String("erro", err.Error()),
+		)
+		return nil, fmt.Errorf("listar cidades: %w", err)
+	}
+
+	stats := make([]job.CityStat, 0, len(rows))
+	for _, row := range rows {
+		stats = append(stats, job.CityStat{
+			City:      row.City,
+			State:     row.State,
+			TotalJobs: row.TotalJobs,
+		})
+	}
+	return stats, nil
+}
+
+func (r *JobRepository) ListSources(ctx context.Context, status string) ([]job.SourceStat, error) {
+	rows, err := r.queries.ListSources(ctx, toNullableText(status))
+	if err != nil {
+		r.logger.ErrorContext(ctx, "falha ao listar fontes",
+			slog.String("status", status),
+			slog.String("erro", err.Error()),
+		)
+		return nil, fmt.Errorf("listar fontes: %w", err)
+	}
+
+	stats := make([]job.SourceStat, 0, len(rows))
+	for _, row := range rows {
+		stats = append(stats, job.SourceStat{
+			Source:    row.Source,
+			TotalJobs: row.TotalJobs,
+		})
+	}
+	return stats, nil
+}
+
 func (r *JobRepository) UpdateLastSeen(ctx context.Context, id uuid.UUID, lastSeenAt time.Time) error {
 	params := db.UpdateJobLastSeenParams{
 		ID:         id,
@@ -317,4 +469,12 @@ func fromNullableTimestamptz(t pgtype.Timestamptz) *time.Time {
 
 func toTimestamptz(t time.Time) pgtype.Timestamptz {
 	return pgtype.Timestamptz{Time: t, Valid: !t.IsZero()}
+}
+
+func toNullableText(s string) pgtype.Text {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return pgtype.Text{Valid: false}
+	}
+	return pgtype.Text{String: s, Valid: true}
 }

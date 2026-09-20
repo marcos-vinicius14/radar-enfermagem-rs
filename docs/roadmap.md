@@ -180,16 +180,16 @@ Este roadmap organiza o desenvolvimento do **Radar Enfermagem RS** em milestones
 
 > **Objetivo:** Expor as vagas armazenadas de forma paginada e filtrável.
 
-- [ ] **Task 36: Implementar `GET /api/v1/jobs`**
-  - [ ] Filtros: `query`, `city`, `state`, `company`, `status`, `date`, `page`, `size`
-- [ ] **Task 37: Implementar `GET /api/v1/jobs/{id}`**
-- [ ] **Task 38: Implementar `GET /api/v1/companies`**
-- [ ] **Task 39: Implementar `GET /api/v1/cities`**
-- [ ] **Task 40: Implementar `GET /api/v1/sources`**
-- [ ] **Task 41: Implementar paginação**
-  - [ ] Limite máximo configurado
-  - [ ] Metadados de paginação (`items`, `page`, `size`, `total`)
-  - [ ] Ordenação determinística
+- [x] **Task 36: Implementar `GET /api/v1/jobs`**
+  - [x] Filtros: `query`, `city`, `state`, `company`, `status`, `date`, `page`, `size`
+- [x] **Task 37: Implementar `GET /api/v1/jobs/{id}`**
+- [x] **Task 38: Implementar `GET /api/v1/companies`**
+- [x] **Task 39: Implementar `GET /api/v1/cities`**
+- [x] **Task 40: Implementar `GET /api/v1/sources`**
+- [x] **Task 41: Implementar paginação**
+  - [x] Limite máximo configurado
+  - [x] Metadados de paginação (`items`, `page`, `size`, `total`)
+  - [x] Ordenação determinística
 
 ---
 

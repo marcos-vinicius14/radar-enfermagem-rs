@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/job"
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/logger"
 )
 
@@ -18,7 +19,7 @@ type DB interface {
 }
 
 // NewRouter cria e configura o roteador Chi com middlewares e rotas padrão.
-func NewRouter(l *slog.Logger, db DB) http.Handler {
+func NewRouter(l *slog.Logger, db DB, jobRepo job.Repository) http.Handler {
 	r := chi.NewRouter()
 
 	// Middlewares essenciais
@@ -31,11 +32,19 @@ func NewRouter(l *slog.Logger, db DB) http.Handler {
 	r.Get("/health", handleHealth)
 	r.Get("/ready", handleReady(db))
 
+	// Rotas da API v1
+	jobsHandler := NewJobsHandler(jobRepo, l)
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Get("/jobs", jobsHandler.ListJobs)
+		r.Get("/jobs/{id}", jobsHandler.GetJobByID)
+		r.Get("/companies", jobsHandler.ListCompanies)
+		r.Get("/cities", jobsHandler.ListCities)
+		r.Get("/sources", jobsHandler.ListSources)
+	})
+
 	// 404 Handler em JSON
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
-		respondJSON(w, http.StatusNotFound, map[string]string{
-			"error": "recurso não encontrado",
-		})
+		respondError(w, http.StatusNotFound, "recurso não encontrado")
 	})
 
 	return r
@@ -73,6 +82,12 @@ func respondJSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(data)
+}
+
+func respondError(w http.ResponseWriter, status int, message string) {
+	respondJSON(w, status, map[string]string{
+		"error": message,
+	})
 }
 
 // WithTestPanicRoute permite anexar uma rota de teste ao router (usado exclusivamente em testes).
