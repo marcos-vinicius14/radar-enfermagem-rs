@@ -79,10 +79,14 @@ func TestViewEngine_RenderIndex(t *testing.T) {
 		"Porto Alegre / RS",
 		"UTI / CTI", // especialidade extraída
 		"R$ 3.000 a R$ 4.500",
-		"Candidatar-se no Portal Oficial",
 		"id=\"search-form\"",
 		"hx-indicator=\"#search-indicator\"",
 		"hx-sync=\"this:replace\"",
+		"badge-beta",
+		"Versão Beta:",
+		"GNU AGPLv3",
+		"Aviso Legal &amp; Isenção de Responsabilidade",
+		"Aviso a recrutadores:",
 	}
 
 	for _, substr := range expectedSubstrings {
