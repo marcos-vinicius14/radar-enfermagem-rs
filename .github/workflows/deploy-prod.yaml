@@ -55,9 +55,7 @@ jobs:
           fi
 
           HTTP_RESPONSE=$(curl -k -s -S -w "\n%{http_code}" -X POST "$DEPLOY_URL" \
-            ${AUTH_HEADER:+-H "$AUTH_HEADER"} \
-            -H "Content-Type: application/json" \
-            -d "{\"tag\": \"${{ steps.version.outputs.tag }}\", \"sha\": \"${{ github.sha }}\", \"actor\": \"${{ github.actor }}\"}")
+            ${AUTH_HEADER:+-H "$AUTH_HEADER"})
 
           HTTP_BODY=$(echo "$HTTP_RESPONSE" | sed '$d')
           HTTP_STATUS=$(echo "$HTTP_RESPONSE" | tail -n 1)
