@@ -88,10 +88,16 @@ cd apps/api && go vet ./... && gofmt -s -w .
 - **Acessibilidade & Mobile First:** Foco em leitura rápida e usabilidade em smartphones para profissionais de enfermagem.
 - **Estados Visuais:** Loading indicators, cards vazios (*empty state*) e feedback de erro claro em português.
 
+### 3.6 Fluxo Git & Política de Commits/Pushes ([`git-workflow.md`](file:///home/marcos/Projects/radar-enfermagem-rs/.agents/rules/git-workflow.md))
+- **Autorização Formal Obrigatória:** É **terminantemente proibido** executar `git commit`, `git push`, abertura ou merge de PRs sem confirmação expressa do usuário.
+- **Protocolo de Parada:** Ao concluir edições e testes, o agente deve exibir o `git status`, resumo das mudanças e sugerir a mensagem de commit, aguardando aprovação explícita antes de prosseguir.
+- **Branches e Conventional Commits:** `main` estritamente protegida; desenvolvimento em `develop` ou feature branches; padrão Conventional Commits (`feat:`, `fix:`, `chore:`, etc.).
+
 ---
 
 ## 4. Checklist do Agente Gemini Antes de Concluir Tarefas
 
+- [ ] Autorização formal e explícita do usuário obtida ANTES de qualquer `git commit` ou `git push`?
 - [ ] Mensagens de erro e validações escritas em **Português (pt-BR)**?
 - [ ] Testes de integração reais adicionados contra o PostgreSQL 18 (Troféu de Testes)?
 - [ ] Queries sqlc sem `SELECT *`, livres de **N+1** e com ordenação determinística?
