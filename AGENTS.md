@@ -14,7 +14,8 @@
 4. [Banco de Dados, PostgreSQL 18 & sqlc](#4-banco-de-dados-postgresql-18--sqlc)
 5. [Observabilidade de Primeira Classe](#5-observabilidade-de-primeira-classe)
 6. [Frontend & Interface de Usuário (HTMX)](#6-frontend--interface-de-usuário-htmx)
-7. [Checklist de Qualidade para PRs e Agentes](#7-checklist-de-qualidade-para-prs-e-agentes)
+7. [Fluxo Git & Política de Commits/Pushes](#7-fluxo-git--política-de-commitspushes)
+8. [Checklist de Qualidade para PRs e Agentes](#8-checklist-de-qualidade-para-prs-e-agentes)
 
 ---
 
@@ -162,10 +163,26 @@ Adotamos a filosofia do **Troféu de Testes (Testing Trophy)** como guia estrat�
 
 ---
 
-## 7. Checklist de Qualidade para PRs e Agentes
+## 7. Fluxo Git & Política de Commits/Pushes
+
+*Baseado em [`.agents/rules/git-workflow.md`](file:///home/marcos/Projects/radar-enfermagem-rs/.agents/rules/git-workflow.md)*
+
+### 7.1 Autorização Formal Obrigatória para Commit e Push
+- **Proibição de Operações Autônomas:** É **terminantemente proibido** a qualquer agente executar `git commit`, `git push`, criação ou merge de PRs sem solicitar e receber confirmação explícita do usuário (ex.: `"pode commitar"`, `"autorizo o push"`).
+- **Protocolo de Entrega:** O agente finaliza as alterações no código, valida os testes e linter, exibe o `git status` e a proposta de mensagem de commit, e aguarda autorização formal antes de commitar.
+
+### 7.2 Branches e Conventional Commits
+- `main`: Branch de produção estritamente protegida (somente merges via PR com CI verde).
+- `develop`: Branch de integração padrão para novos desenvolvimentos e correções.
+- Padrão de commits: `<tipo>(<escopo>): <descrição>` (Conventional Commits).
+
+---
+
+## 8. Checklist de Qualidade para PRs e Agentes
 
 Antes de submeter código ou considerar qualquer milestone/tarefa concluída:
 
+- [ ] A autorização formal e explícita do usuário foi obtida ANTES de qualquer `git commit` ou `git push`?
 - [ ] As mensagens de erro e validações estão em **Português (pt-BR)**?
 - [ ] O ciclo **TDD** foi seguido?
 - [ ] Foram implementados **testes de integração reais** contra o PostgreSQL (Troféu de Testes)?
