@@ -1,6 +1,7 @@
 package collector
 
 import (
+	"net/http"
 	"sort"
 	"sync"
 	"time"
@@ -61,17 +62,23 @@ func (r *Registry) Names() []string {
 	return names
 }
 
-// DefaultRegistry retorna um registro inicializado com todos os 9 portais hospitalares monitorados.
+// DefaultRegistry retorna um registro inicializado com todos os 9 portais hospitalares monitorados usando cliente padrão.
 func DefaultRegistry(timeout time.Duration) *Registry {
+	return NewDefaultRegistry(nil, timeout)
+}
+
+// NewDefaultRegistry retorna um registro inicializado com todos os 9 portais hospitalares monitorados,
+// utilizando o cliente HTTP fornecido (permitindo injeção de cliente resiliente com rate limit e retries).
+func NewDefaultRegistry(client *http.Client, timeout time.Duration) *Registry {
 	r := NewRegistry()
-	r.Register(NewSantaCasaCollector(nil, timeout))
-	r.Register(NewMoinhosCollector(nil, timeout))
-	r.Register(NewSaoLucasCollector(nil, timeout))
-	r.Register(NewUnimedCollector(nil, timeout))
-	r.Register(NewDoctorClinCollector(nil, timeout))
-	r.Register(NewFleuryCollector(nil, timeout))
-	r.Register(NewHCPACollector(nil, timeout))
-	r.Register(NewDivinaCollector(nil, timeout))
-	r.Register(NewMaeDeDeusCollector(nil, timeout))
+	r.Register(NewSantaCasaCollector(client, timeout))
+	r.Register(NewMoinhosCollector(client, timeout))
+	r.Register(NewSaoLucasCollector(client, timeout))
+	r.Register(NewUnimedCollector(client, timeout))
+	r.Register(NewDoctorClinCollector(client, timeout))
+	r.Register(NewFleuryCollector(client, timeout))
+	r.Register(NewHCPACollector(client, timeout))
+	r.Register(NewDivinaCollector(client, timeout))
+	r.Register(NewMaeDeDeusCollector(client, timeout))
 	return r
 }

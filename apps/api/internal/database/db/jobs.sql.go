@@ -395,6 +395,34 @@ func (q *Queries) ListJobs(ctx context.Context, arg ListJobsParams) ([]Job, erro
 	return items, nil
 }
 
+const markJobsExpired = `-- name: MarkJobsExpired :execrows
+UPDATE jobs
+SET status = 'EXPIRED', updated_at = NOW()
+WHERE status = 'UNKNOWN' AND last_seen_at < $1
+`
+
+func (q *Queries) MarkJobsExpired(ctx context.Context, beforeTime pgtype.Timestamptz) (int64, error) {
+	result, err := q.db.Exec(ctx, markJobsExpired, beforeTime)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const markJobsUnknown = `-- name: MarkJobsUnknown :execrows
+UPDATE jobs
+SET status = 'UNKNOWN', updated_at = NOW()
+WHERE status = 'ACTIVE' AND last_seen_at < $1
+`
+
+func (q *Queries) MarkJobsUnknown(ctx context.Context, beforeTime pgtype.Timestamptz) (int64, error) {
+	result, err := q.db.Exec(ctx, markJobsUnknown, beforeTime)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const updateJob = `-- name: UpdateJob :one
 UPDATE jobs
 SET

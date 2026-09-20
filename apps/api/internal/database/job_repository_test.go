@@ -448,3 +448,79 @@ func TestJobRepository_FindByFingerprint(t *testing.T) {
 		}
 	})
 }
+
+func TestJobRepository_ReconcileStatuses(t *testing.T) {
+	_, repo := setupIntegrationTest(t)
+	ctx := context.Background()
+
+	now := time.Now().UTC()
+
+	// Vaga 1: ACTIVE vista há 30 horas (deve virar UNKNOWN)
+	j1 := newValidTestJob("santacasa", "job-reconcile-1")
+	j1.Status = job.StatusActive
+	j1.LastSeenAt = now.Add(-30 * time.Hour)
+	saved1, err := repo.Insert(ctx, j1)
+	if err != nil {
+		t.Fatalf("Insert(j1) falhou: %v", err)
+	}
+
+	// Vaga 2: UNKNOWN vista há 8 dias (deve virar EXPIRED)
+	j2 := newValidTestJob("moinhos", "job-reconcile-2")
+	j2.Status = job.StatusUnknown
+	j2.LastSeenAt = now.Add(-8 * 24 * time.Hour)
+	saved2, err := repo.Insert(ctx, j2)
+	if err != nil {
+		t.Fatalf("Insert(j2) falhou: %v", err)
+	}
+
+	// Vaga 3: ACTIVE vista há 1 hora (deve continuar ACTIVE)
+	j3 := newValidTestJob("hcpa", "job-reconcile-3")
+	j3.Status = job.StatusActive
+	j3.LastSeenAt = now.Add(-1 * time.Hour)
+	saved3, err := repo.Insert(ctx, j3)
+	if err != nil {
+		t.Fatalf("Insert(j3) falhou: %v", err)
+	}
+
+	unknownBefore := now.Add(-24 * time.Hour)
+	expiredBefore := now.Add(-7 * 24 * time.Hour)
+
+	result, err := repo.ReconcileStatuses(ctx, unknownBefore, expiredBefore)
+	if err != nil {
+		t.Fatalf("ReconcileStatuses() erro: %v", err)
+	}
+
+	if result.MarkedUnknown != 1 {
+		t.Errorf("MarkedUnknown = %d, esperado 1", result.MarkedUnknown)
+	}
+	if result.MarkedExpired != 1 {
+		t.Errorf("MarkedExpired = %d, esperado 1", result.MarkedExpired)
+	}
+
+	// Verifica se a vaga 1 agora é UNKNOWN
+	check1, err := repo.FindByID(ctx, saved1.ID)
+	if err != nil {
+		t.Fatalf("FindByID(saved1.ID) erro: %v", err)
+	}
+	if check1.Status != job.StatusUnknown {
+		t.Errorf("status de saved1 = %s, esperado %s", check1.Status, job.StatusUnknown)
+	}
+
+	// Verifica se a vaga 2 agora é EXPIRED
+	check2, err := repo.FindByID(ctx, saved2.ID)
+	if err != nil {
+		t.Fatalf("FindByID(saved2.ID) erro: %v", err)
+	}
+	if check2.Status != job.StatusExpired {
+		t.Errorf("status de saved2 = %s, esperado %s", check2.Status, job.StatusExpired)
+	}
+
+	// Verifica se a vaga 3 permaneceu ACTIVE
+	check3, err := repo.FindByID(ctx, saved3.ID)
+	if err != nil {
+		t.Fatalf("FindByID(saved3.ID) erro: %v", err)
+	}
+	if check3.Status != job.StatusActive {
+		t.Errorf("status de saved3 = %s, esperado %s", check3.Status, job.StatusActive)
+	}
+}

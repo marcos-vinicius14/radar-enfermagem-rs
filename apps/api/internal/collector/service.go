@@ -5,9 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/job"
+	"golang.org/x/sync/errgroup"
 )
 
 // CollectResult agrega os indicadores de performance e contadores da execução de uma coleta.
@@ -95,10 +98,11 @@ func (s *Service) CollectFrom(ctx context.Context, c Collector, query SearchQuer
 		// 1. Verifica se já existe por source + external_id
 		existing, err := s.repo.FindBySourceAndExternalID(ctx, j.Source, j.ExternalID)
 		if err == nil {
-			// Vaga já existe: atualiza dados cadastrais e last_seen_at
+			// Vaga já existe: atualiza dados cadastrais, reativa status se necessário e atualiza last_seen_at
 			j.ID = existing.ID
 			j.CreatedAt = existing.CreatedAt
 			j.LastSeenAt = now
+			j.Status = job.StatusActive
 
 			if _, updateErr := s.repo.Update(ctx, j); updateErr != nil {
 				result.Failed++
@@ -126,6 +130,15 @@ func (s *Service) CollectFrom(ctx context.Context, c Collector, query SearchQuer
 		// 2. Se não existe por source + external_id, verifica se já existe por fingerprint (duplicata lógica entre fontes)
 		existingFP, err := s.repo.FindByFingerprint(ctx, j.Fingerprint)
 		if err == nil {
+			if existingFP.Status != job.StatusActive {
+				existingFP.Status = job.StatusActive
+				if _, updateErr := s.repo.Update(ctx, existingFP); updateErr != nil {
+					s.logger.WarnContext(ctx, "falha ao reativar vaga duplicada por fingerprint",
+						slog.String("id", existingFP.ID.String()),
+						slog.String("erro", updateErr.Error()),
+					)
+				}
+			}
 			if updateSeenErr := s.repo.UpdateLastSeen(ctx, existingFP.ID, now); updateSeenErr != nil {
 				s.logger.WarnContext(ctx, "falha ao atualizar last_seen_at de vaga duplicada por fingerprint",
 					slog.String("id", existingFP.ID.String()),
@@ -145,6 +158,7 @@ func (s *Service) CollectFrom(ctx context.Context, c Collector, query SearchQuer
 		// 3. Vaga totalmente nova: insere no banco
 		j.LastSeenAt = now
 		j.CollectedAt = now
+		j.Status = job.StatusActive
 		if _, insertErr := s.repo.Insert(ctx, j); insertErr != nil {
 			result.Failed++
 			result.Errors = append(result.Errors, insertErr)
@@ -167,4 +181,90 @@ func (s *Service) CollectFrom(ctx context.Context, c Collector, query SearchQuer
 	)
 
 	return result, nil
+}
+
+// CollectAll executa a coleta de múltiplos portais concorrentemente usando errgroup com limite de paralelismo.
+// Falhas em coletores individuais não abortam a execução dos demais, sendo consolidadas no relatório de métricas.
+func (s *Service) CollectAll(ctx context.Context, collectors []Collector, query SearchQuery, concurrency int) (BatchMetrics, error) {
+	if concurrency <= 0 {
+		concurrency = 3
+	}
+
+	runID := uuid.Must(uuid.NewV7()).String()
+	startTime := time.Now().UTC()
+	batchMetrics := NewBatchMetrics(runID, startTime)
+
+	s.logger.InfoContext(ctx, "iniciando ciclo de coleta concorrente",
+		slog.String("run_id", runID),
+		slog.Int("total_coletores", len(collectors)),
+		slog.Int("concorrencia_maxima", concurrency),
+	)
+
+	var g errgroup.Group
+	g.SetLimit(concurrency)
+	var mu sync.Mutex
+
+	for _, c := range collectors {
+		col := c
+		g.Go(func() error {
+			res, err := s.CollectFrom(ctx, col, query)
+			mu.Lock()
+			batchMetrics.AddCollectorResult(res, err)
+			mu.Unlock()
+			return nil
+		})
+	}
+
+	_ = g.Wait()
+	batchMetrics.Finish()
+
+	s.logger.InfoContext(ctx, "ciclo de coleta concorrente finalizado",
+		slog.String("run_id", runID),
+		slog.Int("total_encontradas", batchMetrics.TotalFound),
+		slog.Int("total_inseridas", batchMetrics.TotalInserted),
+		slog.Int("total_atualizadas", batchMetrics.TotalUpdated),
+		slog.Int("total_duplicadas", batchMetrics.TotalDuplicates),
+		slog.Int("total_falhas", batchMetrics.TotalFailed),
+		slog.Duration("duracao", batchMetrics.Duration),
+	)
+
+	return *batchMetrics, nil
+}
+
+// ReconcileJobStatuses atualiza o ciclo de vida das vagas ativas que não foram vistas recentemente:
+// ACTIVE -> UNKNOWN (quando não vista há mais que unknownThreshold)
+// UNKNOWN -> EXPIRED (quando não vista há mais que expiredThreshold)
+func (s *Service) ReconcileJobStatuses(ctx context.Context, unknownThreshold, expiredThreshold time.Duration) (job.StatusReconciliationResult, error) {
+	if unknownThreshold <= 0 {
+		unknownThreshold = 24 * time.Hour
+	}
+	if expiredThreshold <= 0 {
+		expiredThreshold = 7 * 24 * time.Hour
+	}
+
+	now := time.Now().UTC()
+	unknownBefore := now.Add(-unknownThreshold)
+	expiredBefore := now.Add(-expiredThreshold)
+
+	s.logger.InfoContext(ctx, "iniciando reconciliacao de status de vagas",
+		slog.Duration("unknown_threshold", unknownThreshold),
+		slog.Duration("expired_threshold", expiredThreshold),
+		slog.Time("unknown_before", unknownBefore),
+		slog.Time("expired_before", expiredBefore),
+	)
+
+	res, err := s.repo.ReconcileStatuses(ctx, unknownBefore, expiredBefore)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "falha na reconciliacao de status de vagas",
+			slog.String("erro", err.Error()),
+		)
+		return res, fmt.Errorf("reconciliar status de vagas: %w", err)
+	}
+
+	s.logger.InfoContext(ctx, "reconciliacao de status de vagas finalizada",
+		slog.Int64("marcadas_unknown", res.MarkedUnknown),
+		slog.Int64("marcadas_expired", res.MarkedExpired),
+	)
+
+	return res, nil
 }
