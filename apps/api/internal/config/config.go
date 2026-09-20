@@ -10,36 +10,50 @@ import (
 )
 
 type Config struct {
-	AppEnv        string
-	Port          int
-	LogLevel      string
-	DBHost        string
-	DBPort        int
-	DBUser        string
-	DBPassword    string
-	DBName        string
-	DBSSLMode     string
-	DBMaxConns    int
-	DBMinConns    int
-	DBConnTimeout time.Duration
+	AppEnv                      string
+	Port                        int
+	LogLevel                    string
+	DBHost                      string
+	DBPort                      int
+	DBUser                      string
+	DBPassword                  string
+	DBName                      string
+	DBSSLMode                   string
+	DBMaxConns                  int
+	DBMinConns                  int
+	DBConnTimeout               time.Duration
+	EnableScheduler             bool
+	CollectorCronSchedule       string
+	CollectorConcurrency        int
+	CollectorRateLimitRPS       float64
+	CollectorRateLimitBurst     int
+	CollectorStatusUnknownHours int
+	CollectorStatusExpiredHours int
 }
 
 func Load() (*Config, error) {
 	loadDotEnvIfExists()
 
 	cfg := &Config{
-		AppEnv:        getEnv("APP_ENV", "development"),
-		Port:          8080,
-		LogLevel:      getEnv("LOG_LEVEL", "debug"),
-		DBHost:        getEnv("DB_HOST", "localhost"),
-		DBPort:        5432,
-		DBUser:        getEnv("DB_USER", "postgres"),
-		DBPassword:    getEnv("DB_PASSWORD", "postgres"),
-		DBName:        getEnv("DB_NAME", "radar_enfermagem"),
-		DBSSLMode:     getEnv("DB_SSLMODE", "disable"),
-		DBMaxConns:    10,
-		DBMinConns:    2,
-		DBConnTimeout: 5 * time.Second,
+		AppEnv:                      getEnv("APP_ENV", "development"),
+		Port:                        8080,
+		LogLevel:                    getEnv("LOG_LEVEL", "debug"),
+		DBHost:                      getEnv("DB_HOST", "localhost"),
+		DBPort:                      5432,
+		DBUser:                      getEnv("DB_USER", "postgres"),
+		DBPassword:                  getEnv("DB_PASSWORD", "postgres"),
+		DBName:                      getEnv("DB_NAME", "radar_enfermagem"),
+		DBSSLMode:                   getEnv("DB_SSLMODE", "disable"),
+		DBMaxConns:                  10,
+		DBMinConns:                  2,
+		DBConnTimeout:               5 * time.Second,
+		EnableScheduler:             getEnvBool("ENABLE_SCHEDULER", false),
+		CollectorCronSchedule:       getEnv("COLLECTOR_CRON_SCHEDULE", "0 */2 * * *"),
+		CollectorConcurrency:        getEnvInt("COLLECTOR_CONCURRENCY", 3),
+		CollectorRateLimitRPS:       getEnvFloat("COLLECTOR_RATE_LIMIT_RPS", 3.0),
+		CollectorRateLimitBurst:     getEnvInt("COLLECTOR_RATE_LIMIT_BURST", 5),
+		CollectorStatusUnknownHours: getEnvInt("COLLECTOR_STATUS_UNKNOWN_HOURS", 24),
+		CollectorStatusExpiredHours: getEnvInt("COLLECTOR_STATUS_EXPIRED_HOURS", 168),
 	}
 
 	if portStr := os.Getenv("PORT"); portStr != "" {
@@ -112,6 +126,36 @@ func (c *Config) DSN() string {
 func getEnv(key, defaultVal string) string {
 	if val := os.Getenv(key); val != "" {
 		return val
+	}
+	return defaultVal
+}
+
+func getEnvBool(key string, defaultVal bool) bool {
+	if val := os.Getenv(key); val != "" {
+		parsed, err := strconv.ParseBool(val)
+		if err == nil {
+			return parsed
+		}
+	}
+	return defaultVal
+}
+
+func getEnvInt(key string, defaultVal int) int {
+	if val := os.Getenv(key); val != "" {
+		parsed, err := strconv.Atoi(val)
+		if err == nil {
+			return parsed
+		}
+	}
+	return defaultVal
+}
+
+func getEnvFloat(key string, defaultVal float64) float64 {
+	if val := os.Getenv(key); val != "" {
+		parsed, err := strconv.ParseFloat(val, 64)
+		if err == nil {
+			return parsed
+		}
 	}
 	return defaultVal
 }

@@ -212,3 +212,14 @@ RETURNING id, last_seen_at, updated_at;
 
 -- name: CountJobs :one
 SELECT COUNT(*) FROM jobs;
+
+-- name: MarkJobsUnknown :execrows
+UPDATE jobs
+SET status = 'UNKNOWN', updated_at = NOW()
+WHERE status = 'ACTIVE' AND last_seen_at < sqlc.arg(before_time);
+
+-- name: MarkJobsExpired :execrows
+UPDATE jobs
+SET status = 'EXPIRED', updated_at = NOW()
+WHERE status = 'UNKNOWN' AND last_seen_at < sqlc.arg(before_time);
+

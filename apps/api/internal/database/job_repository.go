@@ -229,6 +229,37 @@ func (r *JobRepository) UpdateLastSeen(ctx context.Context, id uuid.UUID, lastSe
 	return nil
 }
 
+func (r *JobRepository) ReconcileStatuses(ctx context.Context, unknownBefore, expiredBefore time.Time) (job.StatusReconciliationResult, error) {
+	var result job.StatusReconciliationResult
+
+	markedUnknown, err := r.queries.MarkJobsUnknown(ctx, toTimestamptz(unknownBefore))
+	if err != nil {
+		r.logger.ErrorContext(ctx, "falha ao marcar vagas como desconhecidas",
+			slog.Time("unknown_before", unknownBefore),
+			slog.String("erro", err.Error()),
+		)
+		return result, fmt.Errorf("marcar vagas como desconhecidas: %w", err)
+	}
+	result.MarkedUnknown = markedUnknown
+
+	markedExpired, err := r.queries.MarkJobsExpired(ctx, toTimestamptz(expiredBefore))
+	if err != nil {
+		r.logger.ErrorContext(ctx, "falha ao marcar vagas como expiradas",
+			slog.Time("expired_before", expiredBefore),
+			slog.String("erro", err.Error()),
+		)
+		return result, fmt.Errorf("marcar vagas como expiradas: %w", err)
+	}
+	result.MarkedExpired = markedExpired
+
+	r.logger.InfoContext(ctx, "reconciliacao de status de vagas executada com sucesso",
+		slog.Int64("marcadas_unknown", result.MarkedUnknown),
+		slog.Int64("marcadas_expired", result.MarkedExpired),
+	)
+
+	return result, nil
+}
+
 func toDomainJob(m db.Job) job.Job {
 	return job.Job{
 		ID:             m.ID,

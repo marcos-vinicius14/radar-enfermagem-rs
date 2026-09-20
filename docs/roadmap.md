@@ -12,7 +12,7 @@ Este roadmap organiza o desenvolvimento do **Radar Enfermagem RS** em milestones
 | [Milestone 2](#milestone-2--domínio-e-persistência-de-vagas) | Domínio e Persistência de Vagas (`jobs`, UUIDv7, sqlc, Repository) | Concluída |
 | [Milestone 3](#milestone-3--pipeline-de-coleta) | Pipeline de Coleta (Contrato Collector, RawJob, Normalizer, Deduplicator) | Concluída |
 | [Milestone 4](#milestone-4--portais-oficiais) | Portais Oficiais (Santa Casa, Moinhos, São Lucas, Unimed, etc.) | Concluída |
-| [Milestone 5](#milestone-5--scheduler-e-resiliência) | Scheduler e Resiliência (Cron, Errgroup, Rate Limiting, Retries) | A Fazer |
+| [Milestone 5](#milestone-5--scheduler-e-resiliência) | Scheduler e Resiliência (Cron, Errgroup, Rate Limiting, Retries) | Concluída |
 | [Milestone 6](#milestone-6--api-de-consulta) | API de Consulta (Endpoints REST paginados e filtráveis) | A Fazer |
 | [Milestone 7](#milestone-7--frontend-htmx) | Frontend HTMX (Layout clean, cards, listagem e filtros dinâmicos) | A Fazer |
 | [Milestone 8](#milestone-8--full-text-search) | Full Text Search (Busca textual nativa com PostgreSQL GIN) | A Fazer |
@@ -160,19 +160,19 @@ Este roadmap organiza o desenvolvimento do **Radar Enfermagem RS** em milestones
 
 > **Objetivo:** Automatizar a coleta e tornar o processo resiliente.
 
-- [ ] **Task 30: Configurar scheduler**
-  - [ ] Frequência inicial: a cada 2 horas (`robfig/cron`)
-- [ ] **Task 31: Executar collectors concorrentemente**
-  - [ ] Usar `golang.org/x/sync/errgroup` com limite de concorrência
-- [ ] **Task 32: Implementar rate limiting**
-  - [ ] Usar `golang.org/x/time/rate` com limites configuráveis por domínio
-- [ ] **Task 33: Implementar política de retry**
-  - [ ] Retry apenas para falhas transitórias (timeout, 5xx, falha temporária de rede)
-  - [ ] Não retentar erros definitivos de 4xx ou parsing inválido
-- [ ] **Task 34: Implementar controle de status das vagas**
-  - [ ] Ciclo de vida: `ACTIVE` → `UNKNOWN` → `EXPIRED`
-- [ ] **Task 35: Adicionar métricas básicas de coleta**
-  - [ ] Contadores: vagas encontradas, novas, atualizadas, ignoradas, erros por fonte e tempo de execução
+- [x] **Task 30: Configurar scheduler**
+  - [x] Frequência inicial: a cada 2 horas (`robfig/cron`)
+- [x] **Task 31: Executar collectors concorrentemente**
+  - [x] Usar `golang.org/x/sync/errgroup` com limite de concorrência
+- [x] **Task 32: Implementar rate limiting**
+  - [x] Usar `golang.org/x/time/rate` com limites configuráveis por domínio
+- [x] **Task 33: Implementar política de retry**
+  - [x] Retry apenas para falhas transitórias (timeout, 5xx, falha temporária de rede)
+  - [x] Não retentar erros definitivos de 4xx ou parsing inválido
+- [x] **Task 34: Implementar controle de status das vagas**
+  - [x] Ciclo de vida: `ACTIVE` → `UNKNOWN` → `EXPIRED`
+- [x] **Task 35: Adicionar métricas básicas de coleta**
+  - [x] Contadores: vagas encontradas, novas, atualizadas, ignoradas, erros por fonte e tempo de execução
 
 ---
 

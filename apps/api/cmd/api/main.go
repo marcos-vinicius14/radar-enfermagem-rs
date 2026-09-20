@@ -10,10 +10,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/collector"
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/config"
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/database"
 	internalhttp "github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/http"
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/logger"
+	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/scheduler"
 )
 
 func main() {
@@ -42,6 +44,44 @@ func main() {
 		defer db.Close()
 	}
 
+	var sched *scheduler.Scheduler
+	if cfg.EnableScheduler && db != nil {
+		httpClient := collector.NewResilientHTTPClient(collector.ResilientClientConfig{
+			Timeout:           20 * time.Second,
+			MaxRetries:        3,
+			InitialRetryDelay: 200 * time.Millisecond,
+			DefaultRPS:        cfg.CollectorRateLimitRPS,
+			DefaultBurst:      cfg.CollectorRateLimitBurst,
+		}, log)
+
+		reg := collector.NewDefaultRegistry(httpClient, 20*time.Second)
+		repo := database.NewJobRepository(db.Pool, log)
+		svc := collector.NewService(repo, nil, nil, log)
+
+		unknownThreshold := time.Duration(cfg.CollectorStatusUnknownHours) * time.Hour
+		expiredThreshold := time.Duration(cfg.CollectorStatusExpiredHours) * time.Hour
+
+		schedInstance, err := scheduler.NewScheduler(scheduler.Config{
+			CronSchedule:     cfg.CollectorCronSchedule,
+			Concurrency:      cfg.CollectorConcurrency,
+			UnknownThreshold: unknownThreshold,
+			ExpiredThreshold: expiredThreshold,
+		}, svc, reg, log)
+		if err != nil {
+			log.Error("failed to create collector scheduler", "error", err)
+		} else {
+			if err := schedInstance.Start(context.Background()); err != nil {
+				log.Error("failed to start collector scheduler", "error", err)
+			} else {
+				sched = schedInstance
+				log.Info("collector scheduler started in background",
+					"cron_schedule", cfg.CollectorCronSchedule,
+					"concurrency", cfg.CollectorConcurrency,
+				)
+			}
+		}
+	}
+
 	router := internalhttp.NewRouter(log, db)
 
 	server := &http.Server{
@@ -68,10 +108,17 @@ func main() {
 	select {
 	case err := <-serverErrors:
 		log.Error("server encountered fatal error", "error", err)
+		if sched != nil {
+			sched.Stop()
+		}
 		os.Exit(1)
 
 	case sig := <-shutdown:
 		log.Info("shutdown signal received, initiating graceful shutdown", "signal", sig.String())
+
+		if sched != nil {
+			sched.Stop()
+		}
 
 		// Contexto para graceful shutdown com timeout de 10 segundos
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -84,4 +131,5 @@ func main() {
 
 		log.Info("server shutdown completed cleanly")
 	}
+
 }

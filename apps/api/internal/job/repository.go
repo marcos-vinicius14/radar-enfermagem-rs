@@ -12,6 +12,11 @@ type ListParams struct {
 	Offset int32
 }
 
+type StatusReconciliationResult struct {
+	MarkedUnknown int64
+	MarkedExpired int64
+}
+
 type Repository interface {
 	Insert(ctx context.Context, j Job) (Job, error)
 
@@ -26,4 +31,6 @@ type Repository interface {
 	List(ctx context.Context, params ListParams) ([]Job, error)
 
 	UpdateLastSeen(ctx context.Context, id uuid.UUID, lastSeenAt time.Time) error
+
+	ReconcileStatuses(ctx context.Context, unknownBefore, expiredBefore time.Time) (StatusReconciliationResult, error)
 }
