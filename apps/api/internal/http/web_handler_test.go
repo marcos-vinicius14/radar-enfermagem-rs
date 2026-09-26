@@ -444,3 +444,62 @@ func TestWebHandler_Home_SpecialtyChipsMultipleActive_SSR(t *testing.T) {
 		t.Error("não esperava que o chip Cirurgico tivesse a classe 'active'")
 	}
 }
+
+func TestWebHandler_ReloadAfterHTMX_DoesNotReturn304ForFragmentETag(t *testing.T) {
+	sampleJob := createSampleJob()
+	mockRepo := &mockWebJobRepo{
+		searchResult: job.PaginatedJobs{
+			Items:      []job.Job{sampleJob},
+			Page:       1,
+			Size:       20,
+			Total:      1,
+			TotalPages: 1,
+		},
+	}
+
+	router := internalhttp.NewRouter(testLogger(), &mockDB{}, mockRepo)
+
+	// 1. Requisição HTMX (fragmento)
+	reqHTMX := httptest.NewRequest(http.MethodGet, "/jobs?query=UTI", nil)
+	reqHTMX.Header.Set("HX-Request", "true")
+	recHTMX := httptest.NewRecorder()
+	router.ServeHTTP(recHTMX, reqHTMX)
+
+	if recHTMX.Code != http.StatusOK {
+		t.Fatalf("esperava status 200 para fragmento HTMX, obteve: %d", recHTMX.Code)
+	}
+
+	vary := recHTMX.Header().Get("Vary")
+	if !strings.Contains(vary, "HX-Request") {
+		t.Errorf("esperava cabeçalho Vary com HX-Request, obteve: %q", vary)
+	}
+
+	cacheControl := recHTMX.Header().Get("Cache-Control")
+	if !strings.Contains(cacheControl, "no-store") {
+		t.Errorf("esperava Cache-Control com no-store para fragmento HTMX, obteve: %q", cacheControl)
+	}
+
+	fragETag := recHTMX.Header().Get("ETag")
+	if fragETag == "" {
+		t.Fatal("esperava ETag presente na resposta do fragmento")
+	}
+
+	// 2. F5 / Reload no navegador: requisição completa com If-None-Match do fragmento
+	reqReload := httptest.NewRequest(http.MethodGet, "/jobs?query=UTI", nil)
+	reqReload.Header.Set("If-None-Match", fragETag)
+	recReload := httptest.NewRecorder()
+	router.ServeHTTP(recReload, reqReload)
+
+	// O servidor NÃO deve responder 304 com o ETag do fragmento para uma requisição de página completa!
+	if recReload.Code != http.StatusOK {
+		t.Fatalf("esperava status 200 (renderização completa da página no reload), obteve: %d", recReload.Code)
+	}
+
+	body := recReload.Body.String()
+	if !strings.Contains(body, "<!DOCTYPE html>") {
+		t.Error("esperava página completa com <!DOCTYPE html> no reload")
+	}
+	if !strings.Contains(body, "/static/css/styles.css") {
+		t.Error("esperava link de folha de estilos CSS na página recarregada")
+	}
+}
