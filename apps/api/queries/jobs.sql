@@ -248,9 +248,9 @@ SELECT
 FROM jobs
 WHERE
     (sqlc.narg('query')::text IS NULL OR (
-        title ILIKE '%' || sqlc.narg('query')::text || '%'
-        OR company ILIKE '%' || sqlc.narg('query')::text || '%'
-        OR description ILIKE '%' || sqlc.narg('query')::text || '%'
+        title ILIKE ANY (SELECT '%' || trim(t) || '%' FROM unnest(string_to_array(sqlc.narg('query')::text, ',')) AS t WHERE trim(t) != '')
+        OR company ILIKE ANY (SELECT '%' || trim(t) || '%' FROM unnest(string_to_array(sqlc.narg('query')::text, ',')) AS t WHERE trim(t) != '')
+        OR description ILIKE ANY (SELECT '%' || trim(t) || '%' FROM unnest(string_to_array(sqlc.narg('query')::text, ',')) AS t WHERE trim(t) != '')
     ))
     AND (sqlc.narg('city')::text IS NULL OR city ILIKE '%' || sqlc.narg('city')::text || '%')
     AND (sqlc.narg('state')::text IS NULL OR state ILIKE sqlc.narg('state')::text)
@@ -267,9 +267,9 @@ SELECT COUNT(*)
 FROM jobs
 WHERE
     (sqlc.narg('query')::text IS NULL OR (
-        title ILIKE '%' || sqlc.narg('query')::text || '%'
-        OR company ILIKE '%' || sqlc.narg('query')::text || '%'
-        OR description ILIKE '%' || sqlc.narg('query')::text || '%'
+        title ILIKE ANY (SELECT '%' || trim(t) || '%' FROM unnest(string_to_array(sqlc.narg('query')::text, ',')) AS t WHERE trim(t) != '')
+        OR company ILIKE ANY (SELECT '%' || trim(t) || '%' FROM unnest(string_to_array(sqlc.narg('query')::text, ',')) AS t WHERE trim(t) != '')
+        OR description ILIKE ANY (SELECT '%' || trim(t) || '%' FROM unnest(string_to_array(sqlc.narg('query')::text, ',')) AS t WHERE trim(t) != '')
     ))
     AND (sqlc.narg('city')::text IS NULL OR city ILIKE '%' || sqlc.narg('city')::text || '%')
     AND (sqlc.narg('state')::text IS NULL OR state ILIKE sqlc.narg('state')::text)

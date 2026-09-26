@@ -379,3 +379,68 @@ func TestWebHandler_StaticFiles(t *testing.T) {
 		t.Fatalf("esperava 200 para /static/img/favicon.svg, obteve: %d", recSVG.Code)
 	}
 }
+
+func TestWebHandler_Home_SpecialtyChipActive_SSR(t *testing.T) {
+	mockRepo := &mockWebJobRepo{
+		searchResult: job.PaginatedJobs{
+			Items:      []job.Job{},
+			Page:       1,
+			Size:       20,
+			Total:      0,
+			TotalPages: 0,
+		},
+	}
+
+	router := internalhttp.NewRouter(testLogger(), &mockDB{}, mockRepo)
+
+	req := httptest.NewRequest(http.MethodGet, "/?query=UTI", nil)
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("esperava status 200 para GET /?query=UTI, obteve: %d", rec.Code)
+	}
+
+	body := rec.Body.String()
+	if !strings.Contains(body, "class=\"chip-btn active\"\n                data-query=\"UTI\"") {
+		t.Error("esperava que o chip UTI tivesse a classe 'active' ao renderizar no SSR com query=UTI")
+	}
+	if strings.Contains(body, "class=\"chip-btn active\"\n                data-query=\"Cirurgico\"") {
+		t.Error("não esperava que o chip Cirurgico tivesse a classe 'active'")
+	}
+}
+
+func TestWebHandler_Home_SpecialtyChipsMultipleActive_SSR(t *testing.T) {
+	mockRepo := &mockWebJobRepo{
+		searchResult: job.PaginatedJobs{
+			Items:      []job.Job{},
+			Page:       1,
+			Size:       20,
+			Total:      0,
+			TotalPages: 0,
+		},
+	}
+
+	router := internalhttp.NewRouter(testLogger(), &mockDB{}, mockRepo)
+
+	req := httptest.NewRequest(http.MethodGet, "/?query=UTI,Pediatria", nil)
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("esperava status 200 para GET /?query=UTI,Pediatria, obteve: %d", rec.Code)
+	}
+
+	body := rec.Body.String()
+	if !strings.Contains(body, "class=\"chip-btn active\"\n                data-query=\"UTI\"") {
+		t.Error("esperava que o chip UTI tivesse a classe 'active' ao renderizar no SSR com query=UTI,Pediatria")
+	}
+	if !strings.Contains(body, "class=\"chip-btn active\"\n                data-query=\"Pediatria\"") {
+		t.Error("esperava que o chip Pediatria tivesse a classe 'active' ao renderizar no SSR com query=UTI,Pediatria")
+	}
+	if strings.Contains(body, "class=\"chip-btn active\"\n                data-query=\"Cirurgico\"") {
+		t.Error("não esperava que o chip Cirurgico tivesse a classe 'active'")
+	}
+}
