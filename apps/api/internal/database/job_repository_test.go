@@ -621,6 +621,28 @@ func TestJobRepository_Search(t *testing.T) {
 		}
 	})
 
+	t.Run("busca textual por multiplos termos separados por virgula (chips de setores)", func(t *testing.T) {
+		res, err := repo.Search(ctx, job.FilterParams{
+			Query:  "CTI, Pediatria",
+			Status: "ACTIVE",
+			Page:   1,
+			Size:   10,
+		})
+		if err != nil {
+			t.Fatalf("Search() erro: %v", err)
+		}
+		if res.Total != 2 {
+			t.Errorf("Total = %d, esperado 2 (CTI e Pediatria)", res.Total)
+		}
+		ids := map[string]bool{}
+		for _, item := range res.Items {
+			ids[item.ExternalID] = true
+		}
+		if !ids["search-001"] || !ids["search-002"] {
+			t.Errorf("esperava search-001 e search-002, obteve: %+v", res.Items)
+		}
+	})
+
 	t.Run("filtro por cidade e empresa", func(t *testing.T) {
 		res, err := repo.Search(ctx, job.FilterParams{
 			City:    "Canoas",

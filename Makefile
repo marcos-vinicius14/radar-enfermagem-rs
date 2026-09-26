@@ -1,7 +1,7 @@
 -include .env
 export
 
-.PHONY: help test test-unit test-integration test-e2e test-cover lint up down logs migrate-up migrate-down sqlc collect collect-persist collect-json run build deploy release
+.PHONY: help test test-unit test-integration test-e2e test-cover lint up down logs migrate-up migrate-down sqlc collect collect-persist collect-json run build deploy release dev
 
 help: ## Exibe os comandos disponíveis
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -56,6 +56,14 @@ collect-json: ## Executa a coleta ao vivo no terminal e exibe em formato JSON
 
 run: ## Executa a API localmente
 	cd apps/api && go run ./cmd/api
+
+dev: up ## Sobe o banco de dados, executa migrações pendentes e inicia a API com Frontend integrado
+	@echo "==> Aguardando banco de dados PostgreSQL estar pronto..."
+	@until docker compose --env-file .env -f deployments/compose.local.yaml exec -T db pg_isready -U $${DB_USER:-postgres} -d $${DB_NAME:-radar_enfermagem} >/dev/null 2>&1; do sleep 1; done
+	@echo "==> Executando migrações pendentes..."
+	$(MAKE) migrate-up
+	@echo "==> Iniciando aplicação (API + Frontend HTMX) em http://localhost:$${PORT:-8080}..."
+	$(MAKE) run
 
 build: ## Compila o binário da API
 	cd apps/api && go build -o bin/api ./cmd/api

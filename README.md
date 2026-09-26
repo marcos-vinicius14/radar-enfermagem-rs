@@ -48,6 +48,29 @@ Atualmente, o Radar monitora portais oficiais e processos seletivos públicos da
 
 ---
 
+## 💡 Arquitetura Frontend: Por que existe um arquivo Go (`apps/web/web.go`)?
+
+Uma dúvida comum ao analisar a estrutura de pastas do projeto é: **por que existe código Go dentro do diretório de frontend (`apps/web`)?**
+
+### 1. Monolito de Processo Único (Single Binary)
+Embora o projeto adote uma divisão de monorepo (`apps/api` e `apps/web`) para manter responsabilidades bem separadas, em tempo de execução ele **não opera como microsserviços dispersos**. O Radar Enfermagem RS é compilado e executado como um **único binário Go** que roda na porta 8080, servindo a API REST, os fragmentos e telas HTMX e os arquivos estáticos diretamente da memória. Isso elimina overhead de rede, reduz o consumo de memória e simplifica o deploy.
+
+### 2. A Restrição Técnica do `//go:embed`
+O Go disponibiliza a diretiva nativa `//go:embed` para embutir arquivos estáticos e templates compilados diretamente no binário executável. Entretanto, o compilador do Go impõe uma regra de segurança estrita: **não é permitido referenciar diretórios superiores utilizando caminhos relativos com `..`** (por exemplo, declarar `//go:embed ../web/templates/*` dentro de `apps/api` resulta em erro fatal de compilação).
+
+Dessa forma, para que os templates HTML (`templates/`) e os arquivos estáticos (`static/`) possam ser embutidos no executável, é obrigatório existir um arquivo Go (`web.go`) no mesmo diretório ou raiz do pacote onde os assets residem.
+
+### 3. Encapsulamento do Frontend como Pacote Go (`package web`)
+O diretório `apps/web` é estruturado como um módulo Go independente (`apps/web/go.mod`) e consumido pelo backend via `replace` no `apps/api/go.mod`. O arquivo [`web.go`](apps/web/web.go) atua como o ponto de entrada do subsistema visual, encapsulando:
+- **`ViewEngine`:** Responsável por compilar e renderizar os templates HTML (`html/template`) para SSR da página inicial e para os fragmentos dinâmicos do HTMX;
+- **`TemplateFuncs`:** Funções utilitárias de renderização de interface (ex.: `timeAgo`, `formatSalary`, `extractSpecialty`, `hasSector`);
+- **`StaticFS()`:** Fornece o `http.FileSystem` com os assets embutidos para o `http.FileServer` servir CSS, JS e imagens com cabeçalhos de cache apropriados;
+- **View-Models Tipados:** Estruturas como `PageData`, `JobItem`, `CityItem`, `CompanyItem` e `FilterParams`, garantindo tipagem estática e segurança entre os handlers HTTP e a renderização HTML.
+
+Essa arquitetura permite que `apps/api` apenas consuma `web.NewViewEngine()` e `web.StaticFS()`, mantendo os handlers HTTP desacoplados da lógica e sintaxe interna dos templates.
+
+---
+
 ## 🔄 Pipeline de Ingestão de Dados (Resumo)
 
 O motor de coleta opera de forma autônoma em segundo plano através de um agendador, garantindo **idempotência**, **resiliência** e **deduplicação lógica dupla**:

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/collector"
+	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/collector/sources/gupy"
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/config"
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/database"
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/job"
@@ -249,7 +250,7 @@ func TestCollectService_EndToEndWithSantaCasaFixture(t *testing.T) {
 	_, repo := setupTestDB(t)
 	ctx := context.Background()
 
-	fixture, err := os.ReadFile("testdata/santacasa_fixture.html")
+	fixture, err := os.ReadFile("sources/gupy/testdata/santacasa_fixture.html")
 	if err != nil {
 		t.Fatalf("falha ao carregar fixture: %v", err)
 	}
@@ -260,7 +261,7 @@ func TestCollectService_EndToEndWithSantaCasaFixture(t *testing.T) {
 	}))
 	defer server.Close()
 
-	santaCasaCollector := collector.NewSantaCasaCollectorWithURL(server.URL, server.Client(), 5*time.Second)
+	santaCasaCollector := gupy.NewSantaCasaCollectorWithURL(server.URL, server.Client(), 5*time.Second)
 	svc := collector.NewService(repo, nil, nil, nil)
 
 	// 1. Coleta e persistência com filtro para Técnico

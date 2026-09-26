@@ -132,3 +132,23 @@ func TestRateLimiter_CleanupInactive(t *testing.T) {
 	// Com maxAge 0, deve limpar
 	rl.CleanupInactive(0)
 }
+
+func TestRateLimiter_BypassesStaticAssets(t *testing.T) {
+	rl := internalhttp.NewIPRateLimiter(rate.Limit(1), 1, nil, nil)
+	handler := rl.Middleware()(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	ip := "198.51.100.99:8000"
+
+	// Faz 10 requisições seguidas para arquivos estáticos - nenhuma deve ser bloqueada
+	for i := 0; i < 10; i++ {
+		req := httptest.NewRequest(http.MethodGet, "/static/css/styles.css", nil)
+		req.RemoteAddr = ip
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, req)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("esperava 200 para asset estático na tentativa %d, obteve: %d", i+1, rec.Code)
+		}
+	}
+}
