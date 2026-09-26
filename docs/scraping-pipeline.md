@@ -76,6 +76,7 @@ flowchart TD
   ```
 - **Coletor de Referência (Santa Casa de Porto Alegre):**
   - Alvo: `https://santacasa.gupy.io`.
+  - Localizado em `internal/collector/sources/santacasa.go` (com motor base em `internal/collector/sources/gupy.go`).
   - Mecanismo: Dispara uma requisição HTTP GET defensiva com timeout de 10s e User-Agent identificado.
   - Em vez de realizar scraping frágil por seletores CSS que mudam a cada build de front-end, o coletor extrai a tag `<script id="__NEXT_DATA__" type="application/json">` gerada pelo Next.js (SSR).
   - Deserializa as vagas estruturadas em `props.pageProps.jobs`.
