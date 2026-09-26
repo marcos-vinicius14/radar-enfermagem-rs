@@ -85,6 +85,16 @@ func TestViewEngine_RenderIndex(t *testing.T) {
 		"hx-sync=\"this:replace\"",
 		"badge-beta",
 		"Versão Beta:",
+		"beta-notice",
+		"beta-card",
+		"beta-link",
+		"site-footer",
+		"footer-grid",
+		"footer-brand-col",
+		"footer-links-col",
+		"footer-disclaimer-card",
+		"footer-bottom-bar",
+		"aria-label=\"Aviso de Versão Beta\"",
 		"GNU AGPLv3",
 		"Aviso Legal &amp; Isenção de Responsabilidade",
 		"Aviso a recrutadores:",
@@ -94,6 +104,54 @@ func TestViewEngine_RenderIndex(t *testing.T) {
 		if !strings.Contains(html, substr) {
 			t.Errorf("HTML renderizado não contém substring esperada: %q", substr)
 		}
+	}
+}
+
+func TestViewEngine_RenderIndex_FooterAndBetaNoticeStructure(t *testing.T) {
+	engine, err := web.NewViewEngine()
+	if err != nil {
+		t.Fatalf("erro ao criar engine: %v", err)
+	}
+
+	var buf bytes.Buffer
+	err = engine.RenderIndex(&buf, web.PageData{
+		Title: "Radar Enfermagem RS",
+	})
+	if err != nil {
+		t.Fatalf("erro ao renderizar index: %v", err)
+	}
+
+	html := buf.String()
+
+	// Validações do Card Beta compacto
+	if !strings.Contains(html, "class=\"beta-notice\"") {
+		t.Error("esperava tag aside com classe 'beta-notice'")
+	}
+	if !strings.Contains(html, "class=\"beta-card\"") {
+		t.Error("esperava card compacto com classe 'beta-card'")
+	}
+	if !strings.Contains(html, "class=\"beta-link\"") {
+		t.Error("esperava link de reporte no GitHub com classe 'beta-link'")
+	}
+
+	// Validações do Rodapé estruturado e acessível
+	if !strings.Contains(html, "class=\"site-footer\"") {
+		t.Error("esperava elemento footer com classe 'site-footer'")
+	}
+	if !strings.Contains(html, "class=\"footer-grid\"") {
+		t.Error("esperava grid com classe 'footer-grid'")
+	}
+	if !strings.Contains(html, "class=\"footer-brand-col\"") {
+		t.Error("esperava coluna da marca com classe 'footer-brand-col'")
+	}
+	if !strings.Contains(html, "class=\"footer-links-col\"") {
+		t.Error("esperava coluna de links com classe 'footer-links-col'")
+	}
+	if !strings.Contains(html, "class=\"footer-disclaimer-card\"") {
+		t.Error("esperava card de aviso legal com classe 'footer-disclaimer-card'")
+	}
+	if !strings.Contains(html, "class=\"footer-bottom-bar\"") {
+		t.Error("esperava barra inferior de copyright com classe 'footer-bottom-bar'")
 	}
 }
 
