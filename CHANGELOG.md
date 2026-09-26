@@ -7,6 +7,20 @@ e este projeto adere ao [Semantic Versioning (SemVer)](https://semver.org/lang/p
 
 ---
 
+## [0.3.1] - 2026-09-26
+
+### Corrigido
+- **Alinhamento e Responsividade do Rodapé (`.site-footer`):**
+  - Reestruturação do grid (`.footer-grid`) com colapso responsivo e empilhamento fluido em tablets (`@media (max-width: 768px)`) e smartphones (`@media (max-width: 640px)`).
+  - Padronização do alinhamento vertical entre a coluna da marca institucional e a coluna de links da comunidade.
+  - Harmonização de espaçamentos, bordas e contraste elevado (WCAG AA com `--color-text-muted`) no card de aviso legal (`.footer-disclaimer-card`) e barra de copyright.
+  - Aumento das áreas de toque (*touch targets*) dos links no mobile para navegação mais ergonômica.
+- **Simplificação e Discreção do Aviso de Versão Beta (`.beta-notice`):**
+  - Remoção da faixa verde de 100vw e da frase extensa que poluíam o topo da tela e competiam com a barra de busca principal.
+  - Redesenho do aviso para uma badge centralizada, sutil e contida (`.beta-card`), respeitando a largura máxima do layout e mantendo a interface limpa e focada na pesquisa de vagas.
+
+---
+
 ## [0.3.0] - 2026-09-26
 
 ### Adicionado

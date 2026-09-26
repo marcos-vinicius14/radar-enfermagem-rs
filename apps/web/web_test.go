@@ -84,10 +84,8 @@ func TestViewEngine_RenderIndex(t *testing.T) {
 		"hx-indicator=\"#search-indicator\"",
 		"hx-sync=\"this:replace\"",
 		"badge-beta",
-		"Versão Beta:",
 		"beta-notice",
 		"beta-card",
-		"beta-link",
 		"site-footer",
 		"footer-grid",
 		"footer-brand-col",
@@ -130,8 +128,8 @@ func TestViewEngine_RenderIndex_FooterAndBetaNoticeStructure(t *testing.T) {
 	if !strings.Contains(html, "class=\"beta-card\"") {
 		t.Error("esperava card compacto com classe 'beta-card'")
 	}
-	if !strings.Contains(html, "class=\"beta-link\"") {
-		t.Error("esperava link de reporte no GitHub com classe 'beta-link'")
+	if !strings.Contains(html, "class=\"badge-beta\"") {
+		t.Error("esperava badge com classe 'badge-beta'")
 	}
 
 	// Validações do Rodapé estruturado e acessível

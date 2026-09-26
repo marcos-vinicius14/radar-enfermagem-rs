@@ -202,7 +202,7 @@ a:hover {
    Aviso de Versão Beta (Card Compacto & Integrado)
    ========================================================================== */
 .beta-notice {
-  padding: 0.75rem 1rem 0;
+  padding: 0.6rem 1rem 0;
 }
 
 .beta-notice-container {
@@ -215,47 +215,7 @@ a:hover {
 .beta-card {
   display: inline-flex;
   align-items: center;
-  gap: 0.65rem;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-primary-border);
-  border-radius: var(--radius-md);
-  padding: 0.4rem 0.85rem;
-  box-shadow: var(--shadow-sm);
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-  line-height: 1.4;
-  max-width: 100%;
-}
-
-.beta-card strong {
-  color: var(--color-text);
-  font-weight: 700;
-}
-
-.beta-card-text {
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.beta-link {
-  color: var(--color-primary);
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  transition: color 0.15s ease;
-}
-
-.beta-link:hover {
-  color: var(--color-primary-hover);
-}
-
-.beta-link-icon {
-  flex-shrink: 0;
+  justify-content: center;
 }
 
 /* ==========================================================================
@@ -1029,18 +989,6 @@ a:hover {
 @media (max-width: 640px) {
   .beta-notice {
     padding: 0.5rem 1rem 0;
-  }
-
-  .beta-card {
-    width: 100%;
-    align-items: flex-start;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
-  }
-
-  .beta-card-text {
-    display: block;
-    font-size: 0.775rem;
   }
 
   .site-footer {
