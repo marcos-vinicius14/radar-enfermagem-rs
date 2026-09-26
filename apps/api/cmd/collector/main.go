@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/collector"
+	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/collector/sources"
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/config"
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/database"
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/logger"
@@ -57,7 +58,7 @@ func main() {
 		DefaultBurst:      cfg.CollectorRateLimitBurst,
 	}, log)
 
-	reg := collector.NewDefaultRegistry(httpClient, 20*time.Second)
+	reg := sources.NewDefaultRegistry(httpClient, 20*time.Second)
 
 	if *scheduleFlag {
 		runSchedulerMode(cfg, reg, log, cronExpr, concurrency, *queryFlag)

@@ -2,6 +2,7 @@ package web_test
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -280,5 +281,89 @@ func TestStaticFS(t *testing.T) {
 	stat, err := file.Stat()
 	if err != nil || stat.Size() == 0 {
 		t.Errorf("arquivo styles.css está vazio ou inacessível: %v", err)
+	}
+}
+
+func TestViewEngine_RenderIndex_SpecialtyChipsActiveState(t *testing.T) {
+	engine, err := web.NewViewEngine()
+	if err != nil {
+		t.Fatalf("erro ao criar engine: %v", err)
+	}
+
+	tests := []struct {
+		name           string
+		query          string
+		expectedActive []string
+	}{
+		{
+			name:           "ativa chip UTI quando query for UTI",
+			query:          "UTI",
+			expectedActive: []string{"UTI"},
+		},
+		{
+			name:           "ativa múltiplos chips quando query for UTI, Cirurgico",
+			query:          "UTI, Cirurgico",
+			expectedActive: []string{"UTI", "Cirurgico"},
+		},
+		{
+			name:           "ativa múltiplos chips quando query for Cirurgico, Pediatria, Hemodialise",
+			query:          "Cirurgico, Pediatria, Hemodialise",
+			expectedActive: []string{"Cirurgico", "Pediatria", "Hemodialise"},
+		},
+		{
+			name:           "ativa chip Emergencia quando query for Emergencia",
+			query:          "Emergencia",
+			expectedActive: []string{"Emergencia"},
+		},
+		{
+			name:           "nenhum chip ativo quando query for vazia",
+			query:          "",
+			expectedActive: nil,
+		},
+		{
+			name:           "nenhum chip ativo quando query for outro termo",
+			query:          "hospital",
+			expectedActive: nil,
+		},
+	}
+
+	allChips := []string{"UTI", "Cirurgico", "Emergencia", "Pediatria", "Hemodialise"}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			data := web.PageData{
+				Title: "Radar Enfermagem RS",
+				Params: web.FilterParams{
+					Query: tc.query,
+				},
+			}
+
+			var buf bytes.Buffer
+			if err := engine.RenderIndex(&buf, data); err != nil {
+				t.Fatalf("erro ao renderizar index: %v", err)
+			}
+
+			html := buf.String()
+
+			expectedMap := map[string]bool{}
+			for _, exp := range tc.expectedActive {
+				expectedMap[exp] = true
+			}
+
+			for _, chip := range allChips {
+				activePattern := fmt.Sprintf("class=\"chip-btn active\"\n                data-query=\"%s\"", chip)
+				inactivePattern := fmt.Sprintf("class=\"chip-btn\"\n                data-query=\"%s\"", chip)
+
+				if expectedMap[chip] {
+					if !strings.Contains(html, activePattern) {
+						t.Errorf("esperava chip %q com classe 'active', mas não foi encontrado no HTML", chip)
+					}
+				} else {
+					if !strings.Contains(html, inactivePattern) {
+						t.Errorf("esperava chip %q inativo com classe 'chip-btn', mas não foi encontrado no HTML", chip)
+					}
+				}
+			}
+		})
 	}
 }

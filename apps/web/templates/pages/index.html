@@ -1,198 +1,305 @@
 {{define "content"}}
 <main class="main-content">
-  <!-- Hero & Área de Busca -->
   <section class="hero-section">
     <div class="hero-container">
       <div class="hero-header">
         <h1 class="hero-title">Vagas para Técnicos de Enfermagem em Porto Alegre e RS</h1>
+
         <p class="hero-subtitle">
           Centralizamos em tempo real oportunidades de trabalho nos principais hospitais, clínicas e redes de saúde do Rio Grande do Sul.
         </p>
       </div>
 
-      <!-- Card do Formulário de Filtros com HTMX & Proteção Anti-Duplo Clique -->
       <div class="search-card">
-        <form id="search-form"
-              hx-get="/jobs"
-              hx-target="#jobs-container"
-              hx-swap="innerHTML"
-              hx-push-url="true"
-              hx-indicator="#search-indicator"
-              hx-sync="this:replace"
-              hx-disabled-elt="find button, find input, find select">
-          
-          <!-- Busca Textual com Debounce de 400ms -->
+        <form
+          id="search-form"
+          hx-get="/jobs"
+          hx-target="#jobs-container"
+          hx-swap="innerHTML"
+          hx-push-url="true"
+          hx-indicator="#search-indicator"
+          hx-sync="this:replace"
+          hx-disabled-elt="find button, input, select"
+        >
           <div class="search-input-group">
-            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg
+              class="search-icon"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <circle cx="11" cy="11" r="8"/>
               <line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <input type="text"
-                   id="query-input"
-                   name="query"
-                   value="{{.Params.Query}}"
-                   placeholder="Buscar por cargo, setor ou palavra-chave (ex: UTI, Pediatria, Centro Cirúrgico)..."
-                   class="search-input"
-                   autocomplete="off"
-                   hx-get="/jobs"
-                   hx-target="#jobs-container"
-                   hx-trigger="keyup changed delay:400ms, search"
-                   hx-include="#search-form"
-                   hx-indicator="#search-indicator"
-                   hx-sync="this:replace"
-                   hx-push-url="true">
+
+            <input
+              type="text"
+              id="query-input"
+              name="query"
+              value="{{.Params.Query}}"
+              placeholder="Buscar por cargo, setor ou palavra-chave (ex: UTI, Pediatria, Centro Cirúrgico)..."
+              class="search-input"
+              autocomplete="off"
+              hx-get="/jobs"
+              hx-target="#jobs-container"
+              hx-trigger="keyup changed delay:400ms, search"
+              hx-include="#search-form"
+              hx-indicator="#search-indicator"
+              hx-sync="this:replace"
+              hx-push-url="true"
+            >
           </div>
 
-          <!-- Grid de Seleção de Filtros -->
           <div class="filters-grid">
-            <!-- Filtro de Cidade -->
             <div class="filter-control">
               <label for="city-select" class="filter-label">Cidade</label>
-              <select id="city-select"
-                      name="city"
-                      class="filter-select"
-                      hx-get="/jobs"
-                      hx-trigger="change"
-                      hx-target="#jobs-container"
-                      hx-include="#search-form"
-                      hx-indicator="#search-indicator"
-                      hx-sync="this:replace"
-                      hx-push-url="true">
+
+              <select
+                id="city-select"
+                name="city"
+                class="filter-select"
+                hx-get="/jobs"
+                hx-trigger="change"
+                hx-target="#jobs-container"
+                hx-include="#search-form"
+                hx-indicator="#search-indicator"
+                hx-sync="this:replace"
+                hx-push-url="true"
+              >
                 <option value="">Todas as cidades</option>
+
                 {{range .Cities}}
-                  <option value="{{.City}}" {{if eq $.Params.City .City}}selected{{end}}>
+                  <option
+                    value="{{.City}}"
+                    {{if eq $.Params.City .City}}selected{{end}}
+                  >
                     {{.City}} ({{.TotalJobs}})
                   </option>
                 {{end}}
               </select>
             </div>
 
-            <!-- Filtro de Instituição / Hospital -->
             <div class="filter-control">
-              <label for="company-select" class="filter-label">Instituição / Hospital</label>
-              <select id="company-select"
-                      name="company"
-                      class="filter-select"
-                      hx-get="/jobs"
-                      hx-trigger="change"
-                      hx-target="#jobs-container"
-                      hx-include="#search-form"
-                      hx-indicator="#search-indicator"
-                      hx-sync="this:replace"
-                      hx-push-url="true">
+              <label for="company-select" class="filter-label">
+                Instituição / Hospital
+              </label>
+
+              <select
+                id="company-select"
+                name="company"
+                class="filter-select"
+                hx-get="/jobs"
+                hx-trigger="change"
+                hx-target="#jobs-container"
+                hx-include="#search-form"
+                hx-indicator="#search-indicator"
+                hx-sync="this:replace"
+                hx-push-url="true"
+              >
                 <option value="">Todas as instituições</option>
+
                 {{range .Companies}}
-                  <option value="{{.Name}}" {{if eq $.Params.Company .Name}}selected{{end}}>
+                  <option
+                    value="{{.Name}}"
+                    {{if eq $.Params.Company .Name}}selected{{end}}
+                  >
                     {{.Name}} ({{.TotalJobs}})
                   </option>
                 {{end}}
               </select>
             </div>
 
-            <!-- Filtro de Período -->
             <div class="filter-control">
-              <label for="date-select" class="filter-label">Publicado em</label>
-              <select id="date-select"
-                      name="date"
-                      class="filter-select"
-                      hx-get="/jobs"
-                      hx-trigger="change"
-                      hx-target="#jobs-container"
-                      hx-include="#search-form"
-                      hx-indicator="#search-indicator"
-                      hx-sync="this:replace"
-                      hx-push-url="true">
-                <option value="" {{if eq .DateFilter ""}}selected{{end}}>Qualquer data</option>
-                <option value="today" {{if eq .DateFilter "today"}}selected{{end}}>Últimas 24 horas</option>
-                <option value="3d" {{if eq .DateFilter "3d"}}selected{{end}}>Últimos 3 dias</option>
-                <option value="7d" {{if eq .DateFilter "7d"}}selected{{end}}>Últimos 7 dias</option>
-                <option value="30d" {{if eq .DateFilter "30d"}}selected{{end}}>Últimos 30 dias</option>
+              <label for="date-select" class="filter-label">
+                Publicado em
+              </label>
+
+              <select
+                id="date-select"
+                name="date"
+                class="filter-select"
+                hx-get="/jobs"
+                hx-trigger="change"
+                hx-target="#jobs-container"
+                hx-include="#search-form"
+                hx-indicator="#search-indicator"
+                hx-sync="this:replace"
+                hx-push-url="true"
+              >
+                <option value="" {{if eq .DateFilter ""}}selected{{end}}>
+                  Qualquer data
+                </option>
+
+                <option value="today" {{if eq .DateFilter "today"}}selected{{end}}>
+                  Últimas 24 horas
+                </option>
+
+                <option value="3d" {{if eq .DateFilter "3d"}}selected{{end}}>
+                  Últimos 3 dias
+                </option>
+
+                <option value="7d" {{if eq .DateFilter "7d"}}selected{{end}}>
+                  Últimos 7 dias
+                </option>
+
+                <option value="30d" {{if eq .DateFilter "30d"}}selected{{end}}>
+                  Últimos 30 dias
+                </option>
               </select>
             </div>
 
-            <!-- Filtro de Status -->
             <input type="hidden" name="status" value="ACTIVE">
           </div>
 
-          <!-- Ações do Formulário -->
           <div class="form-actions">
             <div class="btn-group">
-              <button type="submit" class="btn btn-primary" hx-disabled-elt="this">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <button
+                type="submit"
+                class="btn btn-primary"
+                hx-disabled-elt="this"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
                   <circle cx="11" cy="11" r="8"/>
                   <line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
+
                 <span>Filtrar Vagas</span>
               </button>
 
-              <a href="/"
-                 class="btn btn-secondary"
-                 hx-get="/jobs"
-                 hx-target="#jobs-container"
-                 hx-push-url="/"
-                 hx-disabled-elt="this"
-                 onclick="document.getElementById('search-form').reset();">
+              <a
+                href="/"
+                id="clear-filters"
+                class="btn btn-secondary"
+                hx-get="/jobs"
+                hx-target="#jobs-container"
+                hx-push-url="/"
+                hx-disabled-elt="this"
+              >
                 <span>Limpar filtros</span>
               </a>
             </div>
 
-            <!-- Chips de Especialidades Populares -->
-            <div class="specialty-chips">
+            <div
+              id="specialty-chips"
+              class="specialty-chips"
+            >
               <span class="chips-label">Setores:</span>
-              <button type="button"
-                      class="chip-btn"
-                      hx-get="/jobs?query=UTI"
-                      hx-target="#jobs-container"
-                      hx-push-url="true"
-                      hx-disabled-elt="this"
-                      onclick="document.getElementById('query-input').value='UTI';">
+
+              <button
+                type="button"
+                class="chip-btn{{if hasSector $.Params.Query "UTI"}} active{{end}}"
+                data-query="UTI"
+              >
                 UTI / CTI
               </button>
-              <button type="button"
-                      class="chip-btn"
-                      hx-get="/jobs?query=Cirurgico"
-                      hx-target="#jobs-container"
-                      hx-push-url="true"
-                      hx-disabled-elt="this"
-                      onclick="document.getElementById('query-input').value='Cirurgico';">
+
+              <button
+                type="button"
+                class="chip-btn{{if hasSector $.Params.Query "Cirurgico"}} active{{end}}"
+                data-query="Cirurgico"
+              >
                 Centro Cirúrgico
               </button>
-              <button type="button"
-                      class="chip-btn"
-                      hx-get="/jobs?query=Emergencia"
-                      hx-target="#jobs-container"
-                      hx-push-url="true"
-                      hx-disabled-elt="this"
-                      onclick="document.getElementById('query-input').value='Emergencia';">
+
+              <button
+                type="button"
+                class="chip-btn{{if hasSector $.Params.Query "Emergencia"}} active{{end}}"
+                data-query="Emergencia"
+              >
                 Emergência / PA
               </button>
-              <button type="button"
-                      class="chip-btn"
-                      hx-get="/jobs?query=Pediatria"
-                      hx-target="#jobs-container"
-                      hx-push-url="true"
-                      hx-disabled-elt="this"
-                      onclick="document.getElementById('query-input').value='Pediatria';">
+
+              <button
+                type="button"
+                class="chip-btn{{if hasSector $.Params.Query "Pediatria"}} active{{end}}"
+                data-query="Pediatria"
+              >
                 Pediatria
               </button>
-              <button type="button"
-                      class="chip-btn"
-                      hx-get="/jobs?query=Hemodialise"
-                      hx-target="#jobs-container"
-                      hx-push-url="true"
-                      hx-disabled-elt="this"
-                      onclick="document.getElementById('query-input').value='Hemodialise';">
+
+              <button
+                type="button"
+                class="chip-btn{{if hasSector $.Params.Query "Hemodialise"}} active{{end}}"
+                data-query="Hemodialise"
+              >
                 Hemodiálise
               </button>
             </div>
           </div>
-
         </form>
       </div>
     </div>
   </section>
 
-  <!-- Container Dinâmico da Listagem (Alvo das Atualizações HTMX) -->
   {{template "list.html" .}}
 </main>
+
+<script>
+  const specialtyChips = document.getElementById("specialty-chips");
+  const queryInput = document.getElementById("query-input");
+  const searchForm = document.getElementById("search-form");
+  const clearFilters = document.getElementById("clear-filters");
+
+  specialtyChips.addEventListener("click", (event) => {
+    const chip = event.target.closest(".chip-btn");
+
+    if (!chip) {
+      return;
+    }
+
+    chip.classList.toggle("active");
+
+    const activeChips = Array.from(specialtyChips.querySelectorAll(".chip-btn.active"));
+    const activeQueries = activeChips.map((btn) => btn.dataset.query);
+
+    queryInput.value = activeQueries.join(", ");
+
+    htmx.trigger(queryInput, "search");
+  });
+
+  function syncActiveChips() {
+    const rawVal = queryInput.value.trim().toLowerCase();
+    if (!rawVal) {
+      specialtyChips.querySelectorAll(".chip-btn").forEach((button) => {
+        button.classList.remove("active");
+      });
+      return;
+    }
+
+    const currentTerms = rawVal.split(",").map((t) => t.trim());
+    specialtyChips.querySelectorAll(".chip-btn").forEach((button) => {
+      const chipVal = button.dataset.query.toLowerCase();
+      button.classList.toggle("active", currentTerms.includes(chipVal));
+    });
+  }
+
+  queryInput.addEventListener("input", syncActiveChips);
+  queryInput.addEventListener("change", syncActiveChips);
+
+  clearFilters.addEventListener("click", () => {
+    searchForm.reset();
+    queryInput.value = "";
+    searchForm.querySelectorAll("select").forEach((select) => {
+      select.value = "";
+    });
+
+    specialtyChips
+      .querySelectorAll(".chip-btn")
+      .forEach((button) => button.classList.remove("active"));
+  });
+</script>
 {{end}}

@@ -1,10 +1,8 @@
 package collector
 
 import (
-	"net/http"
 	"sort"
 	"sync"
-	"time"
 )
 
 // Registry gerencia a coleção de coletores de vagas registrados na aplicação.
@@ -60,25 +58,4 @@ func (r *Registry) Names() []string {
 	}
 	sort.Strings(names)
 	return names
-}
-
-// DefaultRegistry retorna um registro inicializado com todos os 9 portais hospitalares monitorados usando cliente padrão.
-func DefaultRegistry(timeout time.Duration) *Registry {
-	return NewDefaultRegistry(nil, timeout)
-}
-
-// NewDefaultRegistry retorna um registro inicializado com todos os 9 portais hospitalares monitorados,
-// utilizando o cliente HTTP fornecido (permitindo injeção de cliente resiliente com rate limit e retries).
-func NewDefaultRegistry(client *http.Client, timeout time.Duration) *Registry {
-	r := NewRegistry()
-	r.Register(NewSantaCasaCollector(client, timeout))
-	r.Register(NewMoinhosCollector(client, timeout))
-	r.Register(NewSaoLucasCollector(client, timeout))
-	r.Register(NewUnimedCollector(client, timeout))
-	r.Register(NewDoctorClinCollector(client, timeout))
-	r.Register(NewFleuryCollector(client, timeout))
-	r.Register(NewHCPACollector(client, timeout))
-	r.Register(NewDivinaCollector(client, timeout))
-	r.Register(NewMaeDeDeusCollector(client, timeout))
-	return r
 }

@@ -253,6 +253,20 @@ func TemplateFuncs() template.FuncMap {
 			}
 			return []int{1, -1, current - 1, current, current + 1, -1, total}
 		},
+
+		"hasSector": func(query, sector string) bool {
+			if query == "" || sector == "" {
+				return false
+			}
+			terms := strings.Split(query, ",")
+			target := strings.ToLower(strings.TrimSpace(sector))
+			for _, t := range terms {
+				if strings.ToLower(strings.TrimSpace(t)) == target {
+					return true
+				}
+			}
+			return false
+		},
 	}
 }
 

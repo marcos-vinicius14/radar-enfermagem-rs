@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/collector"
+	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/collector/sources"
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/config"
 	"github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/database"
 	internalhttp "github.com/marcos-vinicius14/radar-enfermagem-rs/apps/api/internal/http"
@@ -60,7 +61,7 @@ func main() {
 			DefaultBurst:      cfg.CollectorRateLimitBurst,
 		}, log)
 
-		reg := collector.NewDefaultRegistry(httpClient, 20*time.Second)
+		reg := sources.NewDefaultRegistry(httpClient, 20*time.Second)
 		svc := collector.NewService(jobRepo, nil, nil, log)
 
 		unknownThreshold := time.Duration(cfg.CollectorStatusUnknownHours) * time.Hour

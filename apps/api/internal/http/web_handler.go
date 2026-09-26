@@ -113,7 +113,9 @@ func (h *WebHandler) renderJobsPageOrFragment(w http.ResponseWriter, r *http.Req
 	}
 
 	// 2. Mecanismo de Cache ETag e validação HTTP contra F5 excessivo
-	etag := calculateETag(paginated, filterParams)
+	etag := calculateETag(paginated, filterParams, fragmentOnly)
+	w.Header().Set("Vary", "HX-Request")
+
 	if match := r.Header.Get("If-None-Match"); match != "" && match == etag {
 		w.WriteHeader(http.StatusNotModified)
 		return
@@ -190,7 +192,7 @@ func (h *WebHandler) renderJobsPageOrFragment(w http.ResponseWriter, r *http.Req
 	w.Header().Set("ETag", etag)
 
 	if fragmentOnly {
-		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate")
 		if err := h.view.RenderJobListFragment(w, pageData); err != nil {
 			h.logger.ErrorContext(r.Context(), "falha ao renderizar fragmento HTMX", "erro", err.Error())
 		}
@@ -202,9 +204,9 @@ func (h *WebHandler) renderJobsPageOrFragment(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func calculateETag(paginated job.PaginatedJobs, params job.FilterParams) string {
+func calculateETag(paginated job.PaginatedJobs, params job.FilterParams, fragmentOnly bool) string {
 	var sb strings.Builder
-	fmt.Fprintf(&sb, "%d-%d-%d-q:%s-c:%s-co:%s", paginated.Total, paginated.Page, len(paginated.Items), params.Query, params.City, params.Company)
+	fmt.Fprintf(&sb, "frag:%t-%d-%d-%d-q:%s-c:%s-co:%s", fragmentOnly, paginated.Total, paginated.Page, len(paginated.Items), params.Query, params.City, params.Company)
 	if len(paginated.Items) > 0 {
 		first := paginated.Items[0]
 		fmt.Fprintf(&sb, "-f:%s-%s", first.ID.String(), first.UpdatedAt.Format(time.RFC3339Nano))

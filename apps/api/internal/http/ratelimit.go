@@ -97,6 +97,12 @@ func (rl *IPRateLimiter) getLimiter(ip string) *rate.Limiter {
 func (rl *IPRateLimiter) Middleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Não aplica rate limit em arquivos estáticos (CSS, JS, imagens) ou health checks
+			if strings.HasPrefix(r.URL.Path, "/static/") || r.URL.Path == "/health" || r.URL.Path == "/ready" {
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			ip := getClientIP(r)
 			limiter := rl.getLimiter(ip)
 

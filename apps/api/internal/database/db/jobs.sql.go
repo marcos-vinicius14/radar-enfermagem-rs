@@ -28,9 +28,9 @@ SELECT COUNT(*)
 FROM jobs
 WHERE
     ($1::text IS NULL OR (
-        title ILIKE '%' || $1::text || '%'
-        OR company ILIKE '%' || $1::text || '%'
-        OR description ILIKE '%' || $1::text || '%'
+        title ILIKE ANY (SELECT '%' || trim(t) || '%' FROM unnest(string_to_array($1::text, ',')) AS t WHERE trim(t) != '')
+        OR company ILIKE ANY (SELECT '%' || trim(t) || '%' FROM unnest(string_to_array($1::text, ',')) AS t WHERE trim(t) != '')
+        OR description ILIKE ANY (SELECT '%' || trim(t) || '%' FROM unnest(string_to_array($1::text, ',')) AS t WHERE trim(t) != '')
     ))
     AND ($2::text IS NULL OR city ILIKE '%' || $2::text || '%')
     AND ($3::text IS NULL OR state ILIKE $3::text)
@@ -667,9 +667,9 @@ SELECT
 FROM jobs
 WHERE
     ($1::text IS NULL OR (
-        title ILIKE '%' || $1::text || '%'
-        OR company ILIKE '%' || $1::text || '%'
-        OR description ILIKE '%' || $1::text || '%'
+        title ILIKE ANY (SELECT '%' || trim(t) || '%' FROM unnest(string_to_array($1::text, ',')) AS t WHERE trim(t) != '')
+        OR company ILIKE ANY (SELECT '%' || trim(t) || '%' FROM unnest(string_to_array($1::text, ',')) AS t WHERE trim(t) != '')
+        OR description ILIKE ANY (SELECT '%' || trim(t) || '%' FROM unnest(string_to_array($1::text, ',')) AS t WHERE trim(t) != '')
     ))
     AND ($2::text IS NULL OR city ILIKE '%' || $2::text || '%')
     AND ($3::text IS NULL OR state ILIKE $3::text)
