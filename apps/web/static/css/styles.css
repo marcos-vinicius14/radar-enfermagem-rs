@@ -199,42 +199,23 @@ a:hover {
 }
 
 /* ==========================================================================
-   Banner Informativo de Versão Beta
+   Aviso de Versão Beta (Card Compacto & Integrado)
    ========================================================================== */
-.beta-banner {
-  background-color: #F0FDF4;
-  border-bottom: 1px solid #DCFCE7;
-  padding: 0.5rem 1rem;
+.beta-notice {
+  padding: 0.6rem 1rem 0;
 }
 
-.beta-banner-container {
+.beta-notice-container {
   max-width: var(--max-width);
   margin: 0 auto;
   display: flex;
+  justify-content: center;
+}
+
+.beta-card {
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  line-height: 1.4;
-}
-
-.beta-banner-icon {
-  font-size: 0.95rem;
-  flex-shrink: 0;
-}
-
-.beta-banner-text {
-  font-size: 0.8rem;
-  color: #14532D;
-}
-
-.beta-banner-text a {
-  color: #0D7A68;
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.beta-banner-text a:hover {
-  color: #095246;
+  justify-content: center;
 }
 
 /* ==========================================================================
@@ -835,116 +816,203 @@ a:hover {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 2rem;
 }
 
 .footer-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 2rem;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 2.5rem;
+  align-items: start;
+}
+
+.footer-brand-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
 }
 
 .footer-brand-header {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  min-height: 28px;
+}
+
+.footer-brand-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
 }
 
 .footer-brand-title {
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   color: var(--color-primary);
+  letter-spacing: -0.01em;
 }
 
 .footer-mission {
-  font-size: 0.825rem;
+  font-size: 0.85rem;
   color: var(--color-text-muted);
-  line-height: 1.5;
-  margin-bottom: 0.5rem;
-  max-width: 600px;
+  line-height: 1.55;
+  max-width: 620px;
 }
 
 .footer-license {
   font-size: 0.775rem;
-  color: var(--color-text-subtle);
+  color: var(--color-text-muted);
+  line-height: 1.4;
 }
 
 .footer-license a {
   color: var(--color-primary);
-  font-weight: 500;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.footer-license a:hover {
+  color: var(--color-primary-hover);
+}
+
+.footer-links-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
 }
 
 .footer-col-title {
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: 0.825rem;
+  font-weight: 700;
   color: var(--color-text);
-  margin-bottom: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
 }
 
 .footer-links-list {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.25rem;
 }
 
 .footer-links-list li a {
-  font-size: 0.8rem;
+  font-size: 0.825rem;
   color: var(--color-text-muted);
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0;
+  transition: color 0.15s ease;
 }
 
 .footer-links-list li a:hover {
   color: var(--color-primary);
   text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .footer-disclaimer-card {
   background-color: var(--color-surface-muted);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 1rem 1.25rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .disclaimer-title {
-  font-size: 0.8rem;
+  font-size: 0.825rem;
   font-weight: 700;
   color: var(--color-text);
-  margin-bottom: 0.25rem;
+  letter-spacing: -0.01em;
 }
 
 .disclaimer-text {
-  font-size: 0.75rem;
+  font-size: 0.775rem;
   color: var(--color-text-muted);
   line-height: 1.5;
-  margin-bottom: 0.5rem;
 }
 
 .disclaimer-removal {
-  font-size: 0.75rem;
+  font-size: 0.775rem;
   color: var(--color-text-muted);
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .disclaimer-removal a {
   color: var(--color-primary);
   font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.disclaimer-removal a:hover {
+  color: var(--color-primary-hover);
 }
 
 .footer-bottom-bar {
   border-top: 1px solid var(--color-border);
-  padding-top: 1rem;
-  font-size: 0.75rem;
-  color: var(--color-text-subtle);
+  padding-top: 1.25rem;
+  font-size: 0.775rem;
+  color: var(--color-text-muted);
   text-align: center;
+  line-height: 1.4;
 }
 
 /* ==========================================================================
-   Responsividade Mobile First
+   Responsividade Mobile First & Breakpoints
    ========================================================================== */
+
+/* Tablet & telas intermediárias */
+@media (max-width: 768px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+  }
+
+  .footer-mission {
+    max-width: 100%;
+  }
+
+  .footer-brand-header,
+  .footer-col-title {
+    min-height: auto;
+  }
+}
+
+/* Smartphone & telas menores */
 @media (max-width: 640px) {
+  .beta-notice {
+    padding: 0.5rem 1rem 0;
+  }
+
+  .site-footer {
+    padding: 2rem 1rem 1.5rem;
+  }
+
+  .footer-container {
+    gap: 1.5rem;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .footer-links-list li a {
+    padding: 0.4rem 0;
+    font-size: 0.85rem;
+  }
+
+  .footer-disclaimer-card {
+    padding: 1rem;
+  }
+
   .hero-title {
     font-size: 1.35rem;
   }
